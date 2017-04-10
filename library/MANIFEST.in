@@ -1,0 +1,5 @@
+include CHANGELOG.txt
+include LICENSE.txt
+include ptpulse.py
+include README.txt
+include setup.py
