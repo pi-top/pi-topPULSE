@@ -13,13 +13,13 @@ pi-topPULSE libraries, as well as automatic audio configuration, are included an
 
 If you are using a Raspbian-based operating system (including pi-topOS) that does not currently have pi-topPULSE support, then it is easiest to open a terminal window and run the following command (with two ampersands '&'):
 
-    sudo apt-get update && sudo apt-get install pt-pulse
+    sudo apt-get update && sudo apt-get install pt-pulse && sudo reboot
     
 This will install everything you need to use the speaker and interact with the LEDs using Python!
 
 If you just want to install automatic speaker detection and configuration, run the following:
 
-    sudo apt-get update && sudo apt-get install pt-pulse-speaker
+    sudo apt-get update && sudo apt-get install pt-pulse-speaker && sudo reboot
     
 If you just want to install the Python libraries for Python 2 and 3, you have a couple of choices. You can install either using `apt-get` or `pip`.
 
