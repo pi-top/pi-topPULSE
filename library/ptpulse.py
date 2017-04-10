@@ -207,6 +207,10 @@ def _flip(direction):
 # EXTERNAL OPERATIONS #
 #######################
 def brightness(new_brightness):
+    """Set the display brightness between 0.0 and 1.0
+
+    :param b: Brightness from 0.0 to 1.0 (default 1.0)
+    """
     global _brightness
     if new_brightness > 1 or new_brightness < 0:
         raise ValueError('Brightness level must be between 0 and 1')
@@ -214,11 +218,19 @@ def brightness(new_brightness):
 
 
 def get_brightness():
+    """Get the display brightness value
+
+    Returns a float between 0.0 and 1.0
+    """
     global _brightness
     return _brightness
 
 
 def rotation(new_rotation=0):
+    """Set the display rotation
+
+    :param r: Specify the rotation in degrees: 0, 90, 180 or 270
+    """
     global _rotation
     if new_rotation in [0, 90, 180, 270]:
         _rotation = new_rotation
@@ -236,23 +248,37 @@ def flip_v():
 
 
 def get_shape():
+    """Returns the shape (width, height) of the display"""
     global _w
     global _h
     return (_w, _h)
 
 
 def get_pixel(x, y):
+    """Get the RGB value of a single pixel
+
+    :param x: Horizontal position from 0 to 7
+    :param y: Veritcal position from 0 to 7"""
     global _pixel_map
     return _pixel_map[x][y]
 
 
 def set_pixel(x, y, r, g, b):
+    """Set a single pixel to RGB colour
+
+    :param x: Horizontal position from 0 to 7
+    :param y: Veritcal position from 0 to 7
+    :param r: Amount of red from 0 to 255
+    :param g: Amount of green from 0 to 255
+    :param b: Amount of blue from 0 to 255
+    """
     global _pixel_map
     r, g, b = _adjust_r_g_b_for_brightness_correction(r, g, b)
     _pixel_map[x][y] = [r, g, b]
 
 
 def set_all(r, g, b):
+    """Set all pixels to a specific colour"""
     global _pixel_map
     global _w
     global _h
@@ -270,6 +296,7 @@ def set_all(r, g, b):
 
 
 def show():
+    """Update pi-topPULSE with the contents of the display buffer"""
     global _pixel_map
     global _rotation
     _sync_with_device()
@@ -308,10 +335,14 @@ def show():
 
 
 def clear():
+    """Clear the buffer"""
     _pixel_map = _empty_map
 
 
 def off():
+    """Clear the buffer and immediately update pi-topPULSE
+
+    Turns off all pixels."""
     clear()
     show()
 
