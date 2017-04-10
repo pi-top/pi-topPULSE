@@ -1,4 +1,4 @@
-![pi-top Logo](pi-top-logo.png)
+![pi-top Logo](https://pi-top.com/image/loading/pitopLogoBlack.png)
 
 Available from pi-top: https://pi-top.com/product/addon
 
