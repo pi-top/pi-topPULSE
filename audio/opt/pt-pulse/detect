@@ -1,11 +1,23 @@
 #!/bin/bash
 
+connected=false
+prev_connected=false
+
 while true; do
-	if [[ "$(isConnected)" ]]; then
-		/opt/pt-pulse/configure on
+
+	if [[ "$(cat /proc/device-tree/hat/product)" == "pi-topPULSE" ]]; then
+		connected=true
 	else
-		/opt/pt-pulse/configure off
+		connected=false
 	fi
+
+	if $connected && ! $prev_connected; then
+		/opt/pt-pulse/configure on
+	elif ! $connected && $prev_connected; then
+		/opt/pt-plse/configure off
+	fi
+
+	prev_connected=$connected
 
 	sleep 0.25
 done
