@@ -1,0 +1,9 @@
+[Unit]
+Description=pi-topPULSE detection and automatic audio configuration
+
+[Service]
+Type=oneshot
+ExecStart=/opt/pt-pulse/detect
+
+[Install]
+WantedBy=multi-user.target

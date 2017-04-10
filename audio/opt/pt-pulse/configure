@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+	echo "1 parameter accepted only"
+	exit 1
+fi
+
+arg="$1"
+
+if [[ "$arg" != "on" ]] && [[ "$arg" != "off" ]]; then
+	echo "Invalid parameter: 'on' and 'off' only"
+	exit 1
+fi
+
+if [[ "$arg" == "on" ]]; then
+	gpio -g mode 13 pwm
+else
+	gpio -g mode 13 in
+fi

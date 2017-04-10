@@ -1,0 +1,11 @@
+#!/bin/bash
+
+while true; do
+	if [[ "$(isConnected)" ]]; then
+		/opt/pt-pulse/configure on
+	else
+		/opt/pt-pulse/configure off
+	fi
+
+	sleep 0.25
+done
