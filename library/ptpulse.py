@@ -203,6 +203,22 @@ def _flip(direction):
     _pixel_map = flipped_pixel_map
 
 
+def _set_show_state(enabled):
+    global show_enabled
+    show_enabled = enabled
+
+    if !show_enabled:
+        _temp_disable_t.start()
+
+
+def _enable_show_state():
+    _set_show_state(true)
+
+
+def _disable_show_state():
+    _set_show_state(true)
+
+
 #######################
 # EXTERNAL OPERATIONS #
 #######################
@@ -299,6 +315,25 @@ def show():
     """Update pi-topPULSE with the contents of the display buffer"""
     global _pixel_map
     global _rotation
+
+    wait_counter = 0
+
+    attempt_to_show_early = !show_enabled
+    if attempt_to_show_early:
+        print("You are trying to update pi-topPULSE LEDs faster than 50 times a second. Waiting...")
+
+    while !show_enabled:
+        if wait_counter >= 50:
+            # Timer hasn't reset for some reason - force override
+            _enable_show_state()
+            break
+        else:
+            sleep(0.001)
+            wait_counter++
+
+    if attempt_to_show_early:
+        print("pi-topPULSE LEDs re-enabled.")
+
     _sync_with_device()
 
     rotated_pixel_map = _get_rotated_pixel_map()
@@ -332,6 +367,7 @@ def show():
 
         _initialise()
         serial.write(arr)
+        _disable_show_state()
 
 
 def clear():
@@ -350,21 +386,21 @@ def off():
 def start(new_update_rate=0.1):
     global _update_rate
     global _running
-    global _t
+    global _auto_t
     if new_update_rate < (1/_max_freq):
         _update_rate = 1/_max_freq
     else:
         _update_rate = new_update_rate
 
     _running = True
-    _t.start()
+    _auto_t.start()
 
 
 def stop():
     global _running
-    global _t
+    global _auto_t
     _running = False
-    _t.cancel()
+    _auto_t.cancel()
 
 
 def signal_handler(signal, frame):
@@ -379,6 +415,8 @@ def signal_handler(signal, frame):
 ##################
 signal = signal.signal(signal.SIGINT, signal_handler)
 
-_t = Timer(_update_rate, _show_automatically)
+_auto_t = Timer(_update_rate, _show_automatically)
+
+_temp_disable_t = Timer(_max_freq, _enable_show_state)
 
 clear()
