@@ -30,3 +30,5 @@ Just `import pulse`, then all you need is:
 * pulse.set_pixel(x, y, red, green, blue) - Set a pixel in the buffer to the specified colour
 * pulse.show - Update pi-topPULSE with the current buffer
 * pulse.clear - Turn off all the pixels in the buffer and update pi-topPULSE
+
+Note: the `show` function will wait on incoming requests if they are being sent less than 20ms after a previous request. To prevent this, pause for 20ms after each show: `time.sleep(0.02)`.
