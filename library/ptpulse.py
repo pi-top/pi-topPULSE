@@ -72,8 +72,27 @@ _gamma_correction_arr = [
     236, 239, 241, 244, 247, 249, 252, 255
 ]
 
-_sync = bytearray([7, 127, 127, 127, 127, 127, 127, 127,
-                  127, 127, 127, 127, 127, 127, 127, 127, 127, 127])
+_sync = bytearray(
+    [
+        7,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127
+    ]
+)
 
 _empty = [0, 0, 0]
 
@@ -375,13 +394,13 @@ def show():
     _initialise()
 
     # For each col
-    for x in range(_w + 1):
+    for x in range(_w):
         # Write col to LED matrix
         # Start with col no., so LED matrix knows which one it belongs to
         pixel_map_buffer = chr(x)
         # Get col's frame buffer, iterating over each pixel
-        for y in range(_h):
-            if x == _w:
+        for y in range(_h + 1):
+            if y == _h:
                 # Ambient lighting
                 byte0, byte1 = _rgb_to_bytes_to_send(avg_rgb)
             else:
