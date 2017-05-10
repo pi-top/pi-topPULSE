@@ -139,6 +139,11 @@ def _get_avg_colour():
     return avg_rgb
 
 
+def _write(data):
+    serial.write(data)
+    time.sleep(0.00059)
+
+
 def _get_gamma_corrected_value(original_value):
     """
     INTERNAL. Converts a brightness value from 0-255
@@ -204,7 +209,7 @@ def _sync_with_device():
     """
     global _sync
     _initialise()
-    serial.write(_sync)
+    _write(_sync)
 
 
 def _rgb_to_bytes_to_send(rgb):
@@ -380,7 +385,7 @@ def show():
             _enable_show_state()
             break
         else:
-            sleep(0.001)
+            time.sleep(0.001)
             wait_counter++
 
     if attempt_to_show_early:
@@ -414,7 +419,7 @@ def show():
             arr = bytearray(pixel_map_buffer, 'Latin_1')
         else:
             arr = bytearray(pixel_map_buffer)
-        serial.write(arr)
+        _write(arr)
 
     # Prevent another write if it's too fast
     _disable_show_state()
