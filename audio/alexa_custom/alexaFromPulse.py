@@ -102,20 +102,6 @@ def update_state_from_keypress():
     return save_to_file
 
 
-def init_serial():
-    ser = serial.Serial(
-        port = '/dev/serial0',
-        timeout = 1,
-        baudrate = baud_rate,
-        parity = serial.PARITY_NONE,
-        stopbits = serial.STOPBITS_ONE,
-        bytesize = serial.EIGHTBITS
-    )
-
-    print("Serial is open? " + str(ser.isOpen()))
-    print("Waiting for user to start recording...")
-
-
 def get_size(filename):
     st = os.stat(filename)
     return st.st_size
@@ -211,7 +197,49 @@ def update_header_information_after_recording():
 
     return success
 
+####################
+# SERIAL FUNCTIONS #
+####################
+def init_serial():
+    ser = serial.Serial(
+        port = '/dev/serial0',
+        timeout = 1,
+        baudrate = baud_rate,
+        parity = serial.PARITY_NONE,
+        stopbits = serial.STOPBITS_ONE,
+        bytesize = serial.EIGHTBITS
+    )
 
+    print("Serial is open? " + str(ser.isOpen()))
+    print("Waiting for user to start recording...")
+
+def save_wav_from_serial():
+    with open(audio_filepath, 'wb') as file:
+        print("WRITING: initial header information")
+        file.write(init_header_information())
+        print("WRITING: wave data")
+
+        counter = 0
+        while save_to_file:
+            update_state_from_keypress()
+
+            if not ser.inWaiting():
+                print("Waiting for serial receive")
+
+            while not ser.inWaiting():
+                time.sleep(0.001)
+
+            print("Ready to read - reading...")
+            audio_output = ser.read(ser.inWaiting())
+            file.write(audio_output)
+            counter += len(audio_output)
+            print("WAVE DATA: Byte count - " + str(counter))
+
+    print("Finished writing raw WAV data to file")
+
+###################
+# ALEXA FUNCTIONS #
+###################
 def fix_file_for_alexa():
     print("Done creating WAV file")
     # ONLY RUN IF SAMPLE RATE IS NOT EQUAL TO alexa_reqd_sample_rate
@@ -387,38 +415,13 @@ def update_header_information_for_alexa(update_sample_rate = False, update_bits_
 
         os.rename(temp_audio_filepath, audio_filepath)
 
-
-def save_wav_from_serial():
-    with open(audio_filepath, 'wb') as file:
-        print("WRITING: initial header information")
-        file.write(init_header_information())
-        print("WRITING: wave data")
-
-        counter = 0
-        while save_to_file:
-            update_state_from_keypress()
-
-            if not ser.inWaiting():
-                print("Waiting for serial receive")
-
-            while not ser.inWaiting():
-                time.sleep(0.001)
-
-            print("Ready to read - reading...")
-            audio_output = ser.read(ser.inWaiting())
-            file.write(audio_output)
-            counter += len(audio_output)
-            print("WAVE DATA: Byte count - " + str(counter))
-
-    print("Finished writing raw WAV data to file")
-
-
 def do_alexa():
     print("Fixing WAV for Alexa")
     fix_file_for_alexa()
 
     print("Posting to Alexa")
-    send_to_alexa()
+    get_alexa_auth_token()
+    upload_to_alexa_and_save_response_to_file()
 
     print("Sent to Alexa - listening to response")
     listen_to_alexa_response()
@@ -494,16 +497,6 @@ def listen_to_alexa_response():
     output = subprocess.call(('mpg123', '-'), stdin=hmp.stdout)
     cat.wait()
     hmp.wait()
-
-
-def send_to_alexa():
-    get_alexa_auth_token()
-    upload_to_alexa_and_save_response_to_file()
-
-def get_response_from_alexa():
-    with open('response.txt', 'rb') as file:
-        resp = file.read()
-    print(resp)
 
 
 # Internal variables
