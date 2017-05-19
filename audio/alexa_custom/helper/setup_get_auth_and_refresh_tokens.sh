@@ -3,8 +3,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PARENT="$(dirname "$DIR")"
 
-if [ -f "$PARENT/env/common.py" ]; then
-	source "$PARENT/env/common.py"
+if [ -f "$PARENT/env/common.sh" ]; then
+	source "$PARENT/env/common.sh"
 else
 	echo "No 'common' file"
 	exit 1
@@ -34,10 +34,5 @@ if [ ! -z "$ERROR" ] && [[ "$ERROR" != "null" ]]; then
 	exit 1
 fi
 
-ACCESS_TOKEN=$(echo $resp | jq '.access_token')
-ACCESS_TOKEN=${ACCESS_TOKEN//\"/}
 REFRESH_TOKEN=$(echo $resp | jq '.refresh_token')
-REFRESH_TOKEN=${REFRESH_TOKEN//\"/}
-
-save ACCESS_TOKEN "$ACCESS_TOKEN" "$PARENT/env/auth.py"
-save REFRESH_TOKEN "$REFRESH_TOKEN" "$PARENT/env/auth.py"
+save REFRESH_TOKEN "${REFRESH_TOKEN//\"/}" "$PARENT/env/auth.py"
