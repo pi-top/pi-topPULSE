@@ -72,8 +72,27 @@ _gamma_correction_arr = [
     236, 239, 241, 244, 247, 249, 252, 255
 ]
 
-_sync = bytearray([7, 127, 127, 127, 127, 127, 127, 127,
-                  127, 127, 127, 127, 127, 127, 127])
+_sync = bytearray(
+    [
+        7,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127,
+        127
+    ]
+)
 
 _empty = [0, 0, 0]
 
@@ -99,10 +118,30 @@ def _initialise():
         if not os.path.exists('/dev/serial0'):
             err_str = "Could not find serial port - are you sure it's enabled?"
             raise serial.serialutil.SerialException(err_str)
-        serial = serial.Serial('/dev/serial0', 115200, serial.EIGHTBITS,
+        serial = serial.Serial('/dev/serial0', 250000, serial.EIGHTBITS,
                                serial.PARITY_NONE, serial.STOPBITS_ONE)
         serial.isOpen()
         _initialised = true
+
+
+def _get_avg_colour():
+    pix_count = _w * _h
+    total_rgb = [0, 0, 0]
+
+    for i, pix_rgb in enumerate(_pixel_map):
+        for i, val in enumerate(pix_rgb):
+            total_rgb[i] += val
+
+    avg_rgb = [0, 0, 0]
+    for i, val in enumerate(total_rgb):
+        avg_rgb[i] = round(val / pix_count)
+
+    return avg_rgb
+
+
+def _write(data):
+    serial.write(data)
+    time.sleep(0.00059)
 
 
 def _get_gamma_corrected_value(original_value):
@@ -170,7 +209,25 @@ def _sync_with_device():
     """
     global _sync
     _initialise()
-    serial.write(_sync)
+    _write(_sync)
+
+
+def _rgb_to_bytes_to_send(rgb):
+    # |XX|G0|G1|R0|R1|R2|R3|R4|
+    # |G2|G3|G4|B0|B1|B2|B3|B4|
+    # Create 5-bit colour vals; split green into two
+    r = rgb[0]
+    g = rgb[1]
+    b = rgb[2]
+    byte0 = (r >> 3) & 0x1F
+    byte1 = (b >> 3) & 0x1F
+    grnb0 = (g >> 1) & 0x60
+    grnb1 = (g << 2) & 0xE0
+    # Combine into two bytes (5-5-5 colour)
+    byte0 = (byte0 | grnb0) & 0xFF
+    byte1 = (byte1 | grnb1) & 0xFF
+
+    return byte0, byte1
 
 
 def _show_automatically():
@@ -320,7 +377,7 @@ def show():
 
     attempt_to_show_early = !show_enabled
     if attempt_to_show_early:
-        print("You are trying to update pi-topPULSE LEDs faster than 50 times a second. Waiting...")
+        print("Can't update pi-topPULSE LEDs more than 50/s. Waiting...")
 
     while !show_enabled:
         if wait_counter >= 50:
@@ -328,7 +385,7 @@ def show():
             _enable_show_state()
             break
         else:
-            sleep(0.001)
+            time.sleep(0.001)
             wait_counter++
 
     if attempt_to_show_early:
@@ -337,37 +394,35 @@ def show():
     _sync_with_device()
 
     rotated_pixel_map = _get_rotated_pixel_map()
+    avg_rgb = _get_avg_colour()
+
+    _initialise()
 
     # For each col
     for x in range(_w):
-        # Get col's frame buffer
+        # Write col to LED matrix
+        # Start with col no., so LED matrix knows which one it belongs to
         pixel_map_buffer = chr(x)
-        # For each pixel
-        for y in range(_h):
-            # |XX|G0|G1|R0|R1|R2|R3|R4|
-            # |G2|G3|G4|B0|B1|B2|B3|B4|
-            # Create 5-bit colour vals; split green into two
-            rgb = rotated_pixel_map[x][y]
-            r = rgb[0]
-            g = rgb[1]
-            b = rgb[2]
-            byte0 = (r >> 3) & 0x1F
-            byte1 = (b >> 3) & 0x1F
-            grnb0 = (g >> 1) & 0x60
-            grnb1 = (g << 2) & 0xE0
-            # Combine into two bytes (5-5-5 colour)
-            byte0 = (byte0 | grnb0) & 0xFF
-            byte1 = (byte1 | grnb1) & 0xFF
+        # Get col's frame buffer, iterating over each pixel
+        for y in range(_h + 1):
+            if y == _h:
+                # Ambient lighting
+                byte0, byte1 = _rgb_to_bytes_to_send(avg_rgb)
+            else:
+                byte0, byte1 = _rgb_to_bytes_to_send(rotated_pixel_map[x][y])
+
             pixel_map_buffer += chr(byte0)
             pixel_map_buffer += chr(byte1)
+
+        # Write col to LED matrix
         if sys.version_info >= (3, 0):
             arr = bytearray(pixel_map_buffer, 'Latin_1')
         else:
             arr = bytearray(pixel_map_buffer)
+        _write(arr)
 
-        _initialise()
-        serial.write(arr)
-        _disable_show_state()
+    # Prevent another write if it's too fast
+    _disable_show_state()
 
 
 def clear():
