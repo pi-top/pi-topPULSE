@@ -1,0 +1,17 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			brcm,enable-mmap;
+		};
+	};
+
+	__fixups__ {
+		i2s = "/fragment@0:target:0";
+	};
+};

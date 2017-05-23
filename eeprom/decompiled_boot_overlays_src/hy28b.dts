@@ -1,0 +1,130 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@3 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			hy28b_pins {
+				brcm,pins = <0x11 0x19 0x12>;
+				brcm,function = <0x0 0x1 0x1>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@4 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			hy28b@0 {
+				compatible = "ilitek,ili9325";
+				reg = <0x0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <0x1>;
+				spi-max-frequency = <0x2dc6c00>;
+				spi-cpol;
+				spi-cpha;
+				rotate = <0x10e>;
+				bgr;
+				fps = <0x32>;
+				buswidth = <0x8>;
+				startbyte = <0x70>;
+				reset-gpios = <0xdeadbeef 0x19 0x0>;
+				led-gpios = <0xdeadbeef 0x12 0x1>;
+				gamma = "04 1F 4 7 7 0 7 7 6 0\n0F 00 1 7 4 0 0 0 6 7";
+				init = <0x10000e7 0x10 0x1000000 0x1 0x1000001 0x100 0x1000002 0x700 0x1000003 0x1030 0x1000004 0x0 0x1000008 0x207 0x1000009 0x0 0x100000a 0x0 0x100000c 0x1 0x100000d 0x0 0x100000f 0x0 0x1000010 0x0 0x1000011 0x7 0x1000012 0x0 0x1000013 0x0 0x2000032 0x1000010 0x1590 0x1000011 0x227 0x2000032 0x1000012 0x9c 0x2000032 0x1000013 0x1900 0x1000029 0x23 0x100002b 0xe 0x2000032 0x1000020 0x0 0x1000021 0x0 0x2000032 0x1000050 0x0 0x1000051 0xef 0x1000052 0x0 0x1000053 0x13f 0x1000060 0xa700 0x1000061 0x1 0x100006a 0x0 0x1000080 0x0 0x1000081 0x0 0x1000082 0x0 0x1000083 0x0 0x1000084 0x0 0x1000085 0x0 0x1000090 0x10 0x1000092 0x0 0x1000093 0x3 0x1000095 0x110 0x1000097 0x0 0x1000098 0x0 0x1000007 0x133 0x1000020 0x0 0x1000021 0x0 0x2000064>;
+				debug = <0x0>;
+				phandle = <0x2>;
+			};
+
+			hy28b-ts@1 {
+				compatible = "ti,ads7846";
+				reg = <0x1>;
+				spi-max-frequency = <0x1e8480>;
+				interrupts = <0x11 0x2>;
+				interrupt-parent = <0xdeadbeef>;
+				pendown-gpio = <0xdeadbeef 0x11 0x0>;
+				ti,x-plate-ohms = [00 64];
+				ti,pressure-max = [00 ff];
+				phandle = <0x3>;
+			};
+		};
+	};
+
+	__overrides__ {
+		speed = <0x2 0x7370692d 0x6d61782d 0x66726571 0x75656e63 0x793a3000>;
+		rotate = [00 00 00 02 72 6f 74 61 74 65 3a 30 00];
+		fps = [00 00 00 02 66 70 73 3a 30 00];
+		debug = <0x2 0x64656275 0x673a3000>;
+		xohms = [00 00 00 03 74 69 2c 78 2d 70 6c 61 74 65 2d 6f 68 6d 73 3b 30 00];
+		resetgpio = [00 00 00 02 72 65 73 65 74 2d 67 70 69 6f 73 3a 34 00 00 00 00 01 62 72 63 6d 2c 70 69 6e 73 3a 31 00];
+		ledgpio = <0x2 0x6c65642d 0x6770696f 0x733a3400 0x1 0x6272636d 0x2c70696e 0x733a3200>;
+	};
+
+	__symbols__ {
+		hy28b_pins = "/fragment@3/__overlay__/hy28b_pins";
+		hy28b = "/fragment@4/__overlay__/hy28b@0";
+		hy28b_ts = "/fragment@4/__overlay__/hy28b-ts@1";
+	};
+
+	__local_fixups__ {
+
+		fragment@4 {
+
+			__overlay__ {
+
+				hy28b@0 {
+					pinctrl-0 = <0x0>;
+				};
+			};
+		};
+
+		__overrides__ {
+			speed = <0x0>;
+			rotate = <0x0>;
+			fps = <0x0>;
+			debug = <0x0>;
+			xohms = <0x0>;
+			resetgpio = <0x0 0x12>;
+			ledgpio = <0x0 0x10>;
+		};
+	};
+
+	__fixups__ {
+		spi0 = "/fragment@0:target:0", "/fragment@4:target:0";
+		spidev0 = "/fragment@1:target:0";
+		spidev1 = "/fragment@2:target:0";
+		gpio = "/fragment@3:target:0", "/fragment@4/__overlay__/hy28b@0:reset-gpios:0", "/fragment@4/__overlay__/hy28b@0:led-gpios:0", "/fragment@4/__overlay__/hy28b-ts@1:interrupt-parent:0", "/fragment@4/__overlay__/hy28b-ts@1:pendown-gpio:0";
+	};
+};

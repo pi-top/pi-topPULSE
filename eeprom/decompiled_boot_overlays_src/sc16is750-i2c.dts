@@ -1,0 +1,65 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			sc16is750@48 {
+				compatible = "nxp,sc16is750";
+				reg = <0x48>;
+				clocks = <0x1>;
+				interrupt-parent = <0xdeadbeef>;
+				interrupts = <0x18 0x2>;
+				#gpio-cells = <0x2>;
+				phandle = <0x2>;
+
+				sc16is750_clk {
+					compatible = "fixed-clock";
+					#clock-cells = <0x0>;
+					clock-frequency = <0xe10000>;
+					phandle = <0x1>;
+				};
+			};
+		};
+	};
+
+	__overrides__ {
+		int_pin = [00 00 00 02 69 6e 74 65 72 72 75 70 74 73 3a 30 00];
+		addr = [00 00 00 02 72 65 67 3a 30 00];
+	};
+
+	__symbols__ {
+		sc16is750 = "/fragment@0/__overlay__/sc16is750@48";
+		sc16is750_clk = "/fragment@0/__overlay__/sc16is750@48/sc16is750_clk";
+	};
+
+	__local_fixups__ {
+
+		fragment@0 {
+
+			__overlay__ {
+
+				sc16is750@48 {
+					clocks = <0x0>;
+				};
+			};
+		};
+
+		__overrides__ {
+			int_pin = <0x0>;
+			addr = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		i2c_arm = "/fragment@0:target:0";
+		gpio = "/fragment@0/__overlay__/sc16is750@48:interrupt-parent:0";
+	};
+};

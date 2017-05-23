@@ -1,0 +1,36 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			gpios = <0xdeadbeef 0x0 0x0>;
+			phandle = <0x1>;
+		};
+	};
+
+	__overrides__ {
+		gpio = <0x1 0x6770696f 0x733a3400>;
+		activelow = <0x1 0x6770696f 0x733a3800>;
+	};
+
+	__symbols__ {
+		frag0 = "/fragment@0/__overlay__";
+	};
+
+	__local_fixups__ {
+
+		__overrides__ {
+			gpio = <0x0>;
+			activelow = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		act_led = "/fragment@0:target:0";
+		gpio = "/fragment@0/__overlay__:gpios:0";
+	};
+};

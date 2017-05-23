@@ -1,0 +1,76 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			googlevoicehat_pins {
+				brcm,pins = <0x10>;
+				brcm,function = <0x1>;
+				brcm,pull = <0x0>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target-path = [2f 00];
+
+		__overlay__ {
+
+			voicehat-codec {
+				#sound-dai-cells = <0x0>;
+				compatible = "google,voicehat";
+				pinctrl-names = "default";
+				pinctrl-0 = <0x1>;
+				sdmode-gpios = <0xdeadbeef 0x10 0x0>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			compatible = "googlevoicehat,googlevoicehat-soundcard";
+			i2s-controller = <0xdeadbeef>;
+			status = "okay";
+		};
+	};
+
+	__symbols__ {
+		googlevoicehat_pins = "/fragment@1/__overlay__/googlevoicehat_pins";
+	};
+
+	__local_fixups__ {
+
+		fragment@2 {
+
+			__overlay__ {
+
+				voicehat-codec {
+					pinctrl-0 = <0x0>;
+				};
+			};
+		};
+	};
+
+	__fixups__ {
+		i2s = "/fragment@0:target:0", "/fragment@3/__overlay__:i2s-controller:0";
+		gpio = "/fragment@1:target:0", "/fragment@2/__overlay__/voicehat-codec:sdmode-gpios:0";
+		sound = "/fragment@3:target:0";
+	};
+};

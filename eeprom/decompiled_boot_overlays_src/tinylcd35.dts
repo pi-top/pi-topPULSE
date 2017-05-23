@@ -1,0 +1,243 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@3 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			tinylcd35_pins {
+				brcm,pins = <0x19 0x18 0x12>;
+				brcm,function = <0x1>;
+				phandle = <0x1>;
+			};
+
+			tinylcd35_ts_pins {
+				brcm,pins = <0x5>;
+				brcm,function = <0x0>;
+				phandle = <0x2>;
+			};
+
+			keypad_pins {
+				brcm,pins = <0x4 0x11 0x16 0x17 0x1b>;
+				brcm,function = <0x0>;
+				brcm,pull = <0x1>;
+				phandle = <0x3>;
+			};
+		};
+	};
+
+	fragment@4 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			tinylcd35@0 {
+				compatible = "neosec,tinylcd";
+				reg = <0x0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <0x1 0x2>;
+				spi-max-frequency = <0x2dc6c00>;
+				rotate = <0x10e>;
+				fps = <0x14>;
+				bgr;
+				buswidth = <0x8>;
+				reset-gpios = <0xdeadbeef 0x19 0x0>;
+				dc-gpios = <0xdeadbeef 0x18 0x0>;
+				led-gpios = <0xdeadbeef 0x12 0x1>;
+				debug = <0x0>;
+				init = <0x10000b0 0x80 0x10000c0 0xa 0xa 0x10000c1 0x1 0x1 0x10000c2 0x33 0x10000c5 0x0 0x42 0x80 0x10000b1 0xd0 0x11 0x10000b4 0x2 0x10000b6 0x0 0x22 0x3b 0x10000b7 0x7 0x1000036 0x58 0x10000f0 0x36 0xa5 0xd3 0x10000e5 0x80 0x10000e5 0x1 0x10000b3 0x0 0x10000e5 0x0 0x10000f0 0x36 0xa5 0x53 0x10000e0 0x0 0x35 0x33 0x0 0x0 0x0 0x0 0x35 0x33 0x0 0x0 0x0 0x100003a 0x55 0x1000011 0x2000001 0x1000029>;
+				phandle = <0x4>;
+			};
+
+			tinylcd35_ts@1 {
+				compatible = "ti,ads7846";
+				reg = <0x1>;
+				status = "disabled";
+				spi-max-frequency = <0x1e8480>;
+				interrupts = <0x5 0x2>;
+				interrupt-parent = <0xdeadbeef>;
+				pendown-gpio = <0xdeadbeef 0x5 0x0>;
+				ti,x-plate-ohms = [00 64];
+				ti,pressure-max = [00 ff];
+				phandle = <0x5>;
+			};
+		};
+	};
+
+	fragment@5 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			pcf8563@51 {
+				compatible = "nxp,pcf8563";
+				reg = <0x51>;
+				status = "okay";
+				phandle = <0x7>;
+			};
+		};
+	};
+
+	fragment@6 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			ds1307@68 {
+				compatible = "maxim,ds1307";
+				reg = <0x68>;
+				status = "okay";
+				phandle = <0x8>;
+			};
+		};
+	};
+
+	fragment@7 {
+		target-path = "/soc";
+
+		__overlay__ {
+
+			keypad {
+				compatible = "gpio-keys";
+				#address-cells = <0x1>;
+				#size-cells = <0x0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <0x3>;
+				status = "disabled";
+				autorepeat;
+				phandle = <0x6>;
+
+				button@17 {
+					label = "GPIO KEY_UP";
+					linux,code = <0x67>;
+					gpios = <0xdeadbeef 0x11 0x0>;
+				};
+
+				button@22 {
+					label = "GPIO KEY_DOWN";
+					linux,code = <0x6c>;
+					gpios = <0xdeadbeef 0x16 0x0>;
+				};
+
+				button@27 {
+					label = "GPIO KEY_LEFT";
+					linux,code = <0x69>;
+					gpios = <0xdeadbeef 0x1b 0x0>;
+				};
+
+				button@23 {
+					label = "GPIO KEY_RIGHT";
+					linux,code = <0x6a>;
+					gpios = <0xdeadbeef 0x17 0x0>;
+				};
+
+				button@4 {
+					label = "GPIO KEY_ENTER";
+					linux,code = <0x1c>;
+					gpios = <0xdeadbeef 0x4 0x0>;
+				};
+			};
+		};
+	};
+
+	__overrides__ {
+		speed = <0x4 0x7370692d 0x6d61782d 0x66726571 0x75656e63 0x793a3000>;
+		rotate = [00 00 00 04 72 6f 74 61 74 65 3a 30 00];
+		fps = [00 00 00 04 66 70 73 3a 30 00];
+		debug = <0x4 0x64656275 0x673a3000>;
+		touch = [00 00 00 05 73 74 61 74 75 73 00];
+		touchgpio = <0x2 0x6272636d 0x2c70696e 0x733a3000 0x5 0x696e7465 0x72727570 0x74733a30 0x0 0x570656e 0x646f776e 0x2d677069 0x6f3a3400>;
+		xohms = [00 00 00 05 74 69 2c 78 2d 70 6c 61 74 65 2d 6f 68 6d 73 3b 30 00];
+		rtc-pcf = [00 00 00 00 3d 35 00];
+		rtc-ds = [00 00 00 00 3d 36 00];
+		keypad = [00 00 00 06 73 74 61 74 75 73 00];
+	};
+
+	__symbols__ {
+		tinylcd35_pins = "/fragment@3/__overlay__/tinylcd35_pins";
+		tinylcd35_ts_pins = "/fragment@3/__overlay__/tinylcd35_ts_pins";
+		keypad_pins = "/fragment@3/__overlay__/keypad_pins";
+		tinylcd35 = "/fragment@4/__overlay__/tinylcd35@0";
+		tinylcd35_ts = "/fragment@4/__overlay__/tinylcd35_ts@1";
+		pcf8563 = "/fragment@5/__dormant__/pcf8563@51";
+		ds1307 = "/fragment@6/__dormant__/ds1307@68";
+		keypad = "/fragment@7/__overlay__/keypad";
+	};
+
+	__local_fixups__ {
+
+		fragment@4 {
+
+			__overlay__ {
+
+				tinylcd35@0 {
+					pinctrl-0 = <0x0 0x4>;
+				};
+			};
+		};
+
+		fragment@7 {
+
+			__overlay__ {
+
+				keypad {
+					pinctrl-0 = <0x0>;
+				};
+			};
+		};
+
+		__overrides__ {
+			speed = <0x0>;
+			rotate = <0x0>;
+			fps = <0x0>;
+			debug = <0x0>;
+			touch = <0x0>;
+			touchgpio = <0x0 0x10 0x21>;
+			xohms = <0x0>;
+			keypad = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		spi0 = "/fragment@0:target:0", "/fragment@4:target:0";
+		spidev0 = "/fragment@1:target:0";
+		spidev1 = "/fragment@2:target:0";
+		gpio = "/fragment@3:target:0", "/fragment@4/__overlay__/tinylcd35@0:reset-gpios:0", "/fragment@4/__overlay__/tinylcd35@0:dc-gpios:0", "/fragment@4/__overlay__/tinylcd35@0:led-gpios:0", "/fragment@4/__overlay__/tinylcd35_ts@1:interrupt-parent:0", "/fragment@4/__overlay__/tinylcd35_ts@1:pendown-gpio:0", "/fragment@7/__overlay__/keypad/button@17:gpios:0", "/fragment@7/__overlay__/keypad/button@22:gpios:0", "/fragment@7/__overlay__/keypad/button@27:gpios:0", "/fragment@7/__overlay__/keypad/button@23:gpios:0", "/fragment@7/__overlay__/keypad/button@4:gpios:0";
+		i2c1 = "/fragment@5:target:0", "/fragment@6:target:0";
+	};
+};

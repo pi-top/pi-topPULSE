@@ -1,0 +1,70 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target-path = [2f 00];
+
+		__overlay__ {
+
+			onewire@0 {
+				compatible = "w1-gpio";
+				pinctrl-names = "default";
+				pinctrl-0 = <0x1>;
+				gpios = <0xdeadbeef 0x4 0x0 0xdeadbeef 0x5 0x1>;
+				rpi,parasitic-power = <0x0>;
+				status = "okay";
+				phandle = <0x2>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			w1_pins@0 {
+				brcm,pins = <0x4 0x5>;
+				brcm,function = <0x0 0x1>;
+				brcm,pull = <0x0 0x0>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	__overrides__ {
+		gpiopin = <0x2 0x6770696f 0x733a3400 0x2 0x7265673a 0x30000000 0x16272 0x636d2c70 0x696e733a 0x30000000 0x17265 0x673a3000>;
+		extpullup = [00 00 00 02 67 70 69 6f 73 3a 31 36 00 00 00 00 01 62 72 63 6d 2c 70 69 6e 73 3a 34 00];
+		pullup = [00 00 00 02 72 70 69 2c 70 61 72 61 73 69 74 69 63 2d 70 6f 77 65 72 3a 30 00];
+	};
+
+	__symbols__ {
+		w1 = "/fragment@0/__overlay__/onewire@0";
+		w1_pins = "/fragment@1/__overlay__/w1_pins@0";
+	};
+
+	__local_fixups__ {
+
+		fragment@0 {
+
+			__overlay__ {
+
+				onewire@0 {
+					pinctrl-0 = <0x0>;
+				};
+			};
+		};
+
+		__overrides__ {
+			gpiopin = <0x0 0xc 0x16 0x26>;
+			extpullup = <0x0 0xd>;
+			pullup = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		gpio = "/fragment@0/__overlay__/onewire@0:gpios:0", "/fragment@0/__overlay__/onewire@0:gpios:12", "/fragment@1:target:0";
+	};
+};

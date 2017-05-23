@@ -1,0 +1,27 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target-path = [2f 00];
+
+		__overlay__ {
+
+			rpi_backlight {
+				compatible = "raspberrypi,rpi-backlight";
+				firmware = <0xdeadbeef>;
+				status = "okay";
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	__symbols__ {
+		rpi_backlight = "/fragment@0/__overlay__/rpi_backlight";
+	};
+
+	__fixups__ {
+		firmware = "/fragment@0/__overlay__/rpi_backlight:firmware:0";
+	};
+};

@@ -1,0 +1,36 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			brcm,pins = <0xc 0xd>;
+			brcm,function = <0x4>;
+			phandle = <0x1>;
+		};
+	};
+
+	__overrides__ {
+		swap_lr = [00 00 00 01 73 77 61 70 5f 6c 72 3f 00];
+		enable_jack = [00 00 00 01 65 6e 61 62 6c 65 5f 6a 61 63 6b 3f 00];
+	};
+
+	__symbols__ {
+		frag0 = "/fragment@0/__overlay__";
+	};
+
+	__local_fixups__ {
+
+		__overrides__ {
+			swap_lr = <0x0>;
+			enable_jack = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		audio_pins = "/fragment@0:target:0";
+	};
+};

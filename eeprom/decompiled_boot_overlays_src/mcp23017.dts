@@ -1,0 +1,72 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			mcp23017_pins {
+				brcm,pins = <0x4>;
+				brcm,function = <0x0>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			mcp@20 {
+				compatible = "microchip,mcp23017";
+				reg = <0x20>;
+				gpio-controller;
+				#gpio-cells = <0x2>;
+				#interrupt-cells = <0x2>;
+				interrupt-parent = <0xdeadbeef>;
+				interrupts = <0x4 0x2>;
+				interrupt-controller;
+				microchip,irq-mirror;
+				status = "okay";
+				phandle = <0x2>;
+			};
+		};
+	};
+
+	__overrides__ {
+		gpiopin = [00 00 00 01 62 72 63 6d 2c 70 69 6e 73 3a 30 00 00 00 00 02 69 6e 74 65 72 72 75 70 74 73 3a 30 00];
+		addr = [00 00 00 02 72 65 67 3a 30 00];
+	};
+
+	__symbols__ {
+		mcp23017_pins = "/fragment@1/__overlay__/mcp23017_pins";
+		mcp23017 = "/fragment@2/__overlay__/mcp@20";
+	};
+
+	__local_fixups__ {
+
+		__overrides__ {
+			gpiopin = <0x0 0x10>;
+			addr = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		i2c1 = "/fragment@0:target:0", "/fragment@2:target:0";
+		gpio = "/fragment@1:target:0", "/fragment@2/__overlay__/mcp@20:interrupt-parent:0";
+	};
+};

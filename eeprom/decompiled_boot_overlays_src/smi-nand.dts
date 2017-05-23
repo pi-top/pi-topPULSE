@@ -1,0 +1,85 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <0x1>;
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x1>;
+
+			flash@0 {
+				compatible = "brcm,bcm2835-smi-nand";
+				smi_handle = <0xdeadbeef>;
+				#address-cells = <0x1>;
+				#size-cells = <0x1>;
+				status = "okay";
+				phandle = <0x2>;
+
+				partition@0 {
+					label = "stage2";
+					reg = <0x0 0x20000>;
+					read-only;
+				};
+
+				partition@1 {
+					label = "firmware";
+					reg = <0x20000 0x1000000>;
+					read-only;
+				};
+
+				partition@2 {
+					label = "root";
+					reg = <0x1020000 0x80000000>;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			smi_pins {
+				brcm,pins = <0x0 0x1 0x2 0x3 0x4 0x5 0x6 0x7 0x8 0x9 0xa 0xb 0xc 0xd 0xe 0xf>;
+				brcm,function = <0x5 0x5 0x5 0x5 0x5 0x5 0x5 0x5 0x5 0x5 0x5 0x5 0x5 0x5 0x5 0x5>;
+				brcm,pull = <0x2 0x2 0x2 0x2 0x2 0x2 0x2 0x2 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	__symbols__ {
+		nand = "/fragment@1/__overlay__/flash@0";
+		smi_pins = "/fragment@2/__overlay__/smi_pins";
+	};
+
+	__local_fixups__ {
+
+		fragment@0 {
+
+			__overlay__ {
+				pinctrl-0 = <0x0>;
+			};
+		};
+	};
+
+	__fixups__ {
+		smi = "/fragment@0:target:0", "/fragment@1/__overlay__/flash@0:smi_handle:0";
+		soc = "/fragment@1:target:0";
+		gpio = "/fragment@2:target:0";
+	};
+};

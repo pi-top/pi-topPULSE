@@ -1,0 +1,49 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			wm8804@3b {
+				#sound-dai-cells = <0x0>;
+				compatible = "wlf,wm8804";
+				reg = <0x3b>;
+				PVDD-supply = <0xdeadbeef>;
+				DVDD-supply = <0xdeadbeef>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			compatible = "hifiberry,hifiberry-digi";
+			i2s-controller = <0xdeadbeef>;
+			status = "okay";
+		};
+	};
+
+	__fixups__ {
+		i2s = "/fragment@0:target:0", "/fragment@2/__overlay__:i2s-controller:0";
+		i2c1 = "/fragment@1:target:0";
+		vdd_3v3_reg = "/fragment@1/__overlay__/wm8804@3b:PVDD-supply:0", "/fragment@1/__overlay__/wm8804@3b:DVDD-supply:0";
+		sound = "/fragment@2:target:0";
+	};
+};

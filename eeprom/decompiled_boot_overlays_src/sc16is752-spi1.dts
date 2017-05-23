@@ -1,0 +1,101 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			spi1_pins {
+				brcm,pins = <0x13 0x14 0x15>;
+				brcm,function = <0x3>;
+				phandle = <0x1>;
+			};
+
+			spi1_cs_pins {
+				brcm,pins = <0x12>;
+				brcm,function = <0x1>;
+				phandle = <0x2>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			pinctrl-names = "default";
+			pinctrl-0 = <0x1 0x2>;
+			cs-gpios = <0xdeadbeef 0x12 0x1>;
+			status = "okay";
+			phandle = <0x5>;
+
+			sc16is752@0 {
+				compatible = "nxp,sc16is752";
+				reg = <0x0>;
+				clocks = <0x3>;
+				interrupt-parent = <0xdeadbeef>;
+				interrupts = <0x18 0x2>;
+				#gpio-controller;
+				#gpio-cells = <0x2>;
+				spi-max-frequency = <0x3d0900>;
+				phandle = <0x4>;
+
+				sc16is752_clk {
+					compatible = "fixed-clock";
+					#clock-cells = <0x0>;
+					clock-frequency = <0xe10000>;
+					phandle = <0x3>;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	__overrides__ {
+		int_pin = [00 00 00 04 69 6e 74 65 72 72 75 70 74 73 3a 30 00];
+	};
+
+	__symbols__ {
+		spi1_pins = "/fragment@0/__overlay__/spi1_pins";
+		spi1_cs_pins = "/fragment@0/__overlay__/spi1_cs_pins";
+		frag1 = "/fragment@1/__overlay__";
+		sc16is752 = "/fragment@1/__overlay__/sc16is752@0";
+		sc16is752_clk = "/fragment@1/__overlay__/sc16is752@0/sc16is752_clk";
+	};
+
+	__local_fixups__ {
+
+		fragment@1 {
+
+			__overlay__ {
+				pinctrl-0 = <0x0 0x4>;
+
+				sc16is752@0 {
+					clocks = <0x0>;
+				};
+			};
+		};
+
+		__overrides__ {
+			int_pin = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		gpio = "/fragment@0:target:0", "/fragment@1/__overlay__:cs-gpios:0", "/fragment@1/__overlay__/sc16is752@0:interrupt-parent:0";
+		spi1 = "/fragment@1:target:0";
+		aux = "/fragment@2:target:0";
+	};
+};

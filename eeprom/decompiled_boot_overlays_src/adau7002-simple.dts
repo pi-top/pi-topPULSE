@@ -1,0 +1,86 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target-path = [2f 00];
+
+		__overlay__ {
+
+			adau7002-codec {
+				#sound-dai-cells = <0x0>;
+				compatible = "adi,adau7002";
+				status = "okay";
+				phandle = <0x2>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			compatible = "simple-audio-card";
+			simple-audio-card,format = "i2s";
+			simple-audio-card,name = "adau7002";
+			simple-audio-card,bitclock-slave = <0x1>;
+			simple-audio-card,frame-slave = <0x1>;
+			simple-audio-card,widgets = "Microphone", "Microphone Jack";
+			simple-audio-card,routing = "PDM_DAT", "Microphone Jack";
+			status = "okay";
+			phandle = <0x3>;
+
+			simple-audio-card,cpu {
+				sound-dai = <0xdeadbeef>;
+			};
+
+			simple-audio-card,codec {
+				sound-dai = <0x2>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	__overrides__ {
+		card-name = [00 00 00 03 73 69 6d 70 6c 65 2d 61 75 64 69 6f 2d 63 61 72 64 2c 6e 61 6d 65 00];
+	};
+
+	__symbols__ {
+		adau7002_codec = "/fragment@1/__overlay__/adau7002-codec";
+		sound_overlay = "/fragment@2/__overlay__";
+		dailink0_slave = "/fragment@2/__overlay__/simple-audio-card,codec";
+	};
+
+	__local_fixups__ {
+
+		fragment@2 {
+
+			__overlay__ {
+				simple-audio-card,bitclock-slave = <0x0>;
+				simple-audio-card,frame-slave = <0x0>;
+
+				simple-audio-card,codec {
+					sound-dai = <0x0>;
+				};
+			};
+		};
+
+		__overrides__ {
+			card-name = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		i2s = "/fragment@0:target:0", "/fragment@2/__overlay__/simple-audio-card,cpu:sound-dai:0";
+		sound = "/fragment@2:target:0";
+	};
+};

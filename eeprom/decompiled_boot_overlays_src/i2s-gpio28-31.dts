@@ -1,0 +1,18 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2836", "brcm,bcm2708", "brcm,bcm2709";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			brcm,pins = <0x1c 0x1d 0x1e 0x1f>;
+			brcm,function = <0x6>;
+		};
+	};
+
+	__fixups__ {
+		i2s_pins = "/fragment@0:target:0";
+	};
+};

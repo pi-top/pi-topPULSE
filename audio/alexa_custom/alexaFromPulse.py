@@ -13,8 +13,9 @@
 debug = True
 capture_sample_rate    = 20050
 capture_bit_rate       = 8
-audio_filename         = 'audio/output.wav'
-temp_audio_filename    = 'audio/output.wav.tmp'
+audio_dir              = 'audio'
+audio_filename         = 'output.wav'
+temp_audio_filename    = audio_filename + '.tmp'
 baud_rate              = 250000
 metadata_filename      = "metadata.json"
 response_filename      = "response.txt"
@@ -38,7 +39,7 @@ import time
 import tty
 import os
 import select
-from nnresample import resample
+# from nnresample import resample
 
 # Local
 DIR = os.path.dirname(os.path.realpath(__file__))
@@ -46,11 +47,6 @@ sys.path.append(DIR + "/env")
 import auth
 import common
 print("Done...")
-
-audio_filepath      = DIR + "/" + audio_filename
-temp_audio_filepath = DIR + "/" + temp_audio_filename
-metadata_filepath   = DIR + "/" + metadata_filename
-response_filepath   = DIR + "/" + response_filename
 
 
 ####################
@@ -417,7 +413,7 @@ def update_header_information_for_alexa(update_sample_rate = False, update_bits_
 
 def do_alexa():
     print("Fixing WAV for Alexa")
-    fix_file_for_alexa()
+    # fix_file_for_alexa()
 
     print("Posting to Alexa")
     get_alexa_auth_token()
@@ -462,15 +458,17 @@ def upload_to_alexa_and_save_response_to_file():
     print("Uploading audio to Alexa...")
     endpoint = "https://access-alexa-na.amazon.com/v1/avs/speechrecognizer/recognize"
 
+    # metadata.json already has "format": "audio/L16; rate=16000; channels=1"
+        # can we remove this here?
+        # what about removing the metadata.json file instead?
     r = requests.post(
-        endpoint
-        , headers={
+        endpoint,
+        headers = {
             "Authorization": "Bearer " + ACCESS_TOKEN
-        }
-        , files={
-            'metadata': (metadata_filename, open(metadata_filepath, 'rb'), 'application/json; charset=UTF-8'),
-            # metadata.json already has "format": "audio/L16; rate=16000; channels=1" - can we remove this here? what about removing the metadata.json file instead?
-            'audio': (audio_filename, open(audio_filepath, 'rb'), 'audio/L16; rate=16000; channels=1')
+        },
+        files = {
+            "metadata": (metadata_filename, open(metadata_filepath, "rb"), "application/json; charset=UTF-8"),
+            "audio": (audio_filename, open(audio_filepath, "rb"), "audio/L16; rate=16000; channels=1")
         }
     )
 
@@ -500,6 +498,13 @@ def listen_to_alexa_response():
 
 
 # Internal variables
+audio_filepath      = DIR + "/" + audio_dir + "/" + audio_filename
+temp_audio_filepath = DIR + "/" + audio_dir + "/" + temp_audio_filename
+metadata_filepath   = DIR + "/" + metadata_filename
+response_filepath   = DIR + "/" + response_filename
+
+ACCESS_TOKEN = ""
+
 save_to_file = False
 header_length = 44
 alexa_reqd_sample_rate = 16000

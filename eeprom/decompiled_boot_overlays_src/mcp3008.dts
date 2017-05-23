@@ -1,0 +1,257 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@2 {
+		target-path = "spi1/spidev@0";
+
+		__dormant__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@3 {
+		target-path = "spi1/spidev@1";
+
+		__dormant__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@4 {
+		target-path = "spi1/spidev@2";
+
+		__dormant__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@5 {
+		target-path = "spi2/spidev@0";
+
+		__dormant__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@6 {
+		target-path = "spi2/spidev@1";
+
+		__dormant__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@7 {
+		target-path = "spi2/spidev@2";
+
+		__dormant__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@8 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			mcp3008@0 {
+				compatible = "mcp3008";
+				reg = <0x0>;
+				spi-max-frequency = <0x186a00>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@9 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			mcp3008@1 {
+				compatible = "mcp3008";
+				reg = <0x1>;
+				spi-max-frequency = <0x186a00>;
+				phandle = <0x2>;
+			};
+		};
+	};
+
+	fragment@10 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			mcp3008@0 {
+				compatible = "mcp3008";
+				reg = <0x0>;
+				spi-max-frequency = <0x186a00>;
+				phandle = <0x3>;
+			};
+		};
+	};
+
+	fragment@11 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			mcp3008@1 {
+				compatible = "mcp3008";
+				reg = <0x1>;
+				spi-max-frequency = <0x186a00>;
+				phandle = <0x4>;
+			};
+		};
+	};
+
+	fragment@12 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			mcp3008@2 {
+				compatible = "mcp3008";
+				reg = <0x2>;
+				spi-max-frequency = <0x186a00>;
+				phandle = <0x5>;
+			};
+		};
+	};
+
+	fragment@13 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			mcp3008@0 {
+				compatible = "mcp3008";
+				reg = <0x0>;
+				spi-max-frequency = <0x186a00>;
+				phandle = <0x6>;
+			};
+		};
+	};
+
+	fragment@14 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			mcp3008@1 {
+				compatible = "mcp3008";
+				reg = <0x1>;
+				spi-max-frequency = <0x186a00>;
+				phandle = <0x7>;
+			};
+		};
+	};
+
+	fragment@15 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			mcp3008@2 {
+				compatible = "mcp3008";
+				reg = <0x2>;
+				spi-max-frequency = <0x186a00>;
+				phandle = <0x8>;
+			};
+		};
+	};
+
+	__overrides__ {
+		spi0-0-present = [00 00 00 00 2b 30 2b 38 00];
+		spi0-1-present = [00 00 00 00 2b 31 2b 39 00];
+		spi1-0-present = [00 00 00 00 2b 32 2b 31 30 00];
+		spi1-1-present = [00 00 00 00 2b 33 2b 31 31 00];
+		spi1-2-present = [00 00 00 00 2b 34 2b 31 32 00];
+		spi2-0-present = [00 00 00 00 2b 35 2b 31 33 00];
+		spi2-1-present = [00 00 00 00 2b 36 2b 31 34 00];
+		spi2-2-present = [00 00 00 00 2b 37 2b 31 35 00];
+		spi0-0-speed = <0x1 0x7370692d 0x6d61782d 0x66726571 0x75656e63 0x793a3000>;
+		spi0-1-speed = <0x2 0x7370692d 0x6d61782d 0x66726571 0x75656e63 0x793a3000>;
+		spi1-0-speed = <0x3 0x7370692d 0x6d61782d 0x66726571 0x75656e63 0x793a3000>;
+		spi1-1-speed = <0x4 0x7370692d 0x6d61782d 0x66726571 0x75656e63 0x793a3000>;
+		spi1-2-speed = <0x5 0x7370692d 0x6d61782d 0x66726571 0x75656e63 0x793a3000>;
+		spi2-0-speed = <0x6 0x7370692d 0x6d61782d 0x66726571 0x75656e63 0x793a3000>;
+		spi2-1-speed = "", "", "", "\aspi-max-frequency:0";
+		spi2-2-speed = "", "", "", "\bspi-max-frequency:0";
+	};
+
+	__symbols__ {
+		mcp3008_00 = "/fragment@8/__dormant__/mcp3008@0";
+		mcp3008_01 = "/fragment@9/__dormant__/mcp3008@1";
+		mcp3008_10 = "/fragment@10/__dormant__/mcp3008@0";
+		mcp3008_11 = "/fragment@11/__dormant__/mcp3008@1";
+		mcp3008_12 = "/fragment@12/__dormant__/mcp3008@2";
+		mcp3008_20 = "/fragment@13/__dormant__/mcp3008@0";
+		mcp3008_21 = "/fragment@14/__dormant__/mcp3008@1";
+		mcp3008_22 = "/fragment@15/__dormant__/mcp3008@2";
+	};
+
+	__local_fixups__ {
+
+		__overrides__ {
+			spi0-0-speed = <0x0>;
+			spi0-1-speed = <0x0>;
+			spi1-0-speed = <0x0>;
+			spi1-1-speed = <0x0>;
+			spi1-2-speed = <0x0>;
+			spi2-0-speed = <0x0>;
+			spi2-1-speed = <0x0>;
+			spi2-2-speed = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		spidev0 = "/fragment@0:target:0";
+		spidev1 = "/fragment@1:target:0";
+		spi0 = "/fragment@8:target:0", "/fragment@9:target:0";
+		spi1 = "/fragment@10:target:0", "/fragment@11:target:0", "/fragment@12:target:0";
+		spi2 = "/fragment@13:target:0", "/fragment@14:target:0", "/fragment@15:target:0";
+	};
+};

@@ -1,0 +1,53 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			codec@11 {
+				compatible = "adi,adau1977";
+				reg = <0x11>;
+				reset-gpios = <0xdeadbeef 0x5 0x0>;
+				AVDD-supply = <0xdeadbeef>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			compatible = "adi,adau1977-adc";
+			i2s-controller = <0xdeadbeef>;
+			status = "okay";
+		};
+	};
+
+	__symbols__ {
+		adau1977 = "/fragment@0/__overlay__/codec@11";
+	};
+
+	__fixups__ {
+		i2c = "/fragment@0:target:0";
+		gpio = "/fragment@0/__overlay__/codec@11:reset-gpios:0";
+		vdd_3v3_reg = "/fragment@0/__overlay__/codec@11:AVDD-supply:0";
+		i2s = "/fragment@1:target:0", "/fragment@2/__overlay__:i2s-controller:0";
+		sound = "/fragment@2:target:0";
+	};
+};

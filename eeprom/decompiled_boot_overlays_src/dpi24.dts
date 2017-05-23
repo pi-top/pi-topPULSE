@@ -1,0 +1,47 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <0x1>;
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			dpi24_pins {
+				brcm,pins = <0x0 0x1 0x2 0x3 0x4 0x5 0x6 0x7 0x8 0x9 0xa 0xb 0xc 0xd 0xe 0xf 0x10 0x11 0x12 0x13 0x14 0x15 0x16 0x17 0x18 0x19 0x1a 0x1b>;
+				brcm,function = <0x6>;
+				brcm,pull = <0x0>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	__symbols__ {
+		dpi24_pins = "/fragment@1/__overlay__/dpi24_pins";
+	};
+
+	__local_fixups__ {
+
+		fragment@0 {
+
+			__overlay__ {
+				pinctrl-0 = <0x0>;
+			};
+		};
+	};
+
+	__fixups__ {
+		leds = "/fragment@0:target:0";
+		gpio = "/fragment@1:target:0";
+	};
+};

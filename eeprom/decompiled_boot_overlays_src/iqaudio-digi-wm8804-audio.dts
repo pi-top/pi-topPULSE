@@ -1,0 +1,69 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			wm8804@3b {
+				#sound-dai-cells = <0x0>;
+				compatible = "wlf,wm8804";
+				reg = <0x3b>;
+				status = "okay";
+				DVDD-supply = <0xdeadbeef>;
+				PVDD-supply = <0xdeadbeef>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			compatible = "iqaudio,wm8804-digi";
+			i2s-controller = <0xdeadbeef>;
+			status = "okay";
+			phandle = <0x1>;
+		};
+	};
+
+	__overrides__ {
+		card_name = [00 00 00 01 77 6d 38 38 30 34 2d 64 69 67 69 2c 63 61 72 64 2d 6e 61 6d 65 00];
+		dai_name = [00 00 00 01 77 6d 38 38 30 34 2d 64 69 67 69 2c 64 61 69 2d 6e 61 6d 65 00];
+		dai_stream_name = <0x1 0x776d3838 0x30342d64 0x6967692c 0x6461692d 0x73747265 0x616d2d6e 0x616d6500>;
+	};
+
+	__symbols__ {
+		wm8804_digi = "/fragment@2/__overlay__";
+	};
+
+	__local_fixups__ {
+
+		__overrides__ {
+			card_name = <0x0>;
+			dai_name = <0x0>;
+			dai_stream_name = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		i2s = "/fragment@0:target:0", "/fragment@2/__overlay__:i2s-controller:0";
+		i2c1 = "/fragment@1:target:0";
+		vdd_3v3_reg = "/fragment@1/__overlay__/wm8804@3b:DVDD-supply:0", "/fragment@1/__overlay__/wm8804@3b:PVDD-supply:0";
+		sound = "/fragment@2:target:0";
+	};
+};

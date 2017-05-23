@@ -1,0 +1,157 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			wlf_pins {
+				brcm,pins = <0x11 0x16 0x1b 0x8>;
+				brcm,function = <0x1 0x1 0x0 0x1>;
+				phandle = <0x3>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target-path = [2f 00];
+
+		__overlay__ {
+
+			rpi_cirrus_reg_1v8 {
+				compatible = "regulator-fixed";
+				regulator-name = "RPi-Cirrus 1v8";
+				regulator-min-microvolt = <0x1b7740>;
+				regulator-max-microvolt = <0x1b7740>;
+				regulator-always-on;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			spidev@0 {
+				status = "disabled";
+			};
+
+			spidev@1 {
+				status = "disabled";
+			};
+
+			wm5102@1 {
+				compatible = "wlf,wm5102";
+				reg = <0x1>;
+				spi-max-frequency = <0x7a120>;
+				interrupt-parent = <0xdeadbeef>;
+				interrupts = <0x1b 0x8>;
+				interrupt-controller;
+				#interrupt-cells = <0x2>;
+				gpio-controller;
+				#gpio-cells = <0x2>;
+				LDOVDD-supply = <0x1>;
+				AVDD-supply = <0x1>;
+				DBVDD1-supply = <0x1>;
+				DBVDD2-supply = <0xdeadbeef>;
+				DBVDD3-supply = <0xdeadbeef>;
+				CPVDD-supply = <0x1>;
+				SPKVDDL-supply = <0xdeadbeef>;
+				SPKVDDR-supply = <0xdeadbeef>;
+				DCVDD-supply = <0x2>;
+				wlf,reset = <0xdeadbeef 0x11 0x0>;
+				wlf,ldoena = <0xdeadbeef 0x16 0x0>;
+				wlf,gpio-defaults = <0xffffffff 0xffffffff 0xffffffff 0xffffffff 0xffffffff>;
+				wlf,micd-configs = <0x0 0x1 0x0>;
+				wlf,dmic-ref = <0x0 0x2 0x0 0x0>;
+				wlf,inmode = <0x0 0x2 0x1 0x0>;
+				status = "okay";
+
+				ldo1 {
+					regulator-name = "LDO1";
+					regulator-min-microvolt = <0x124f80>;
+					regulator-max-microvolt = <0x1b7740>;
+					phandle = <0x2>;
+				};
+			};
+		};
+	};
+
+	fragment@4 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+
+			wm8804@3b {
+				compatible = "wlf,wm8804";
+				reg = <0x3b>;
+				status = "okay";
+				PVDD-supply = <0xdeadbeef>;
+				DVDD-supply = <0xdeadbeef>;
+				wlf,reset-gpio = <0xdeadbeef 0x8 0x0>;
+			};
+		};
+	};
+
+	fragment@5 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			compatible = "wlf,rpi-cirrus";
+			i2s-controller = <0xdeadbeef>;
+			status = "okay";
+		};
+	};
+
+	__symbols__ {
+		wlf_pins = "/fragment@1/__overlay__/wlf_pins";
+		rpi_cirrus_reg_1v8 = "/fragment@2/__overlay__/rpi_cirrus_reg_1v8";
+		arizona_ldo1 = "/fragment@3/__overlay__/wm5102@1/ldo1";
+	};
+
+	__local_fixups__ {
+
+		fragment@3 {
+
+			__overlay__ {
+
+				wm5102@1 {
+					LDOVDD-supply = <0x0>;
+					AVDD-supply = <0x0>;
+					DBVDD1-supply = <0x0>;
+					CPVDD-supply = <0x0>;
+					DCVDD-supply = <0x0>;
+				};
+			};
+		};
+	};
+
+	__fixups__ {
+		i2s = "/fragment@0:target:0", "/fragment@5/__overlay__:i2s-controller:0";
+		gpio = "/fragment@1:target:0", "/fragment@3/__overlay__/wm5102@1:interrupt-parent:0", "/fragment@3/__overlay__/wm5102@1:wlf,reset:0", "/fragment@3/__overlay__/wm5102@1:wlf,ldoena:0", "/fragment@4/__overlay__/wm8804@3b:wlf,reset-gpio:0";
+		spi0 = "/fragment@3:target:0";
+		vdd_3v3_reg = "/fragment@3/__overlay__/wm5102@1:DBVDD2-supply:0", "/fragment@3/__overlay__/wm5102@1:DBVDD3-supply:0", "/fragment@4/__overlay__/wm8804@3b:PVDD-supply:0", "/fragment@4/__overlay__/wm8804@3b:DVDD-supply:0";
+		vdd_5v0_reg = "/fragment@3/__overlay__/wm5102@1:SPKVDDL-supply:0", "/fragment@3/__overlay__/wm5102@1:SPKVDDR-supply:0";
+		i2c1 = "/fragment@4:target:0";
+		sound = "/fragment@5:target:0";
+	};
+};

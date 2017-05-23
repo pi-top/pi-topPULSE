@@ -1,0 +1,61 @@
+/dts-v1/;
+
+/ {
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			pwm_pins {
+				brcm,pins = <0x12>;
+				brcm,function = <0x2>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <0x1>;
+			assigned-clock-rates = <0x5f5e100>;
+			status = "okay";
+			phandle = <0x2>;
+		};
+	};
+
+	__overrides__ {
+		pin = <0x1 0x6272636d 0x2c70696e 0x733a3000>;
+		func = <0x1 0x6272636d 0x2c66756e 0x6374696f 0x6e3a3000>;
+		clock = [00 00 00 02 61 73 73 69 67 6e 65 64 2d 63 6c 6f 63 6b 2d 72 61 74 65 73 3a 30 00];
+	};
+
+	__symbols__ {
+		pwm_pins = "/fragment@0/__overlay__/pwm_pins";
+		frag1 = "/fragment@1/__overlay__";
+	};
+
+	__local_fixups__ {
+
+		fragment@1 {
+
+			__overlay__ {
+				pinctrl-0 = <0x0>;
+			};
+		};
+
+		__overrides__ {
+			pin = <0x0>;
+			func = <0x0>;
+			clock = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		gpio = "/fragment@0:target:0";
+		pwm = "/fragment@1:target:0";
+	};
+};

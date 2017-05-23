@@ -1,0 +1,58 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			pinctrl-0 = <0x1>;
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			i2c1 {
+				brcm,pins = <0x2 0x3>;
+				brcm,function = <0x4>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	__overrides__ {
+		sda1_pin = <0x1 0x6272636d 0x2c70696e 0x733a3000>;
+		scl1_pin = <0x1 0x6272636d 0x2c70696e 0x733a3400>;
+		pin_func = <0x1 0x6272636d 0x2c66756e 0x6374696f 0x6e3a3000>;
+	};
+
+	__symbols__ {
+		i2c1_pins = "/fragment@1/__overlay__/i2c1";
+	};
+
+	__local_fixups__ {
+
+		fragment@0 {
+
+			__overlay__ {
+				pinctrl-0 = <0x0>;
+			};
+		};
+
+		__overrides__ {
+			sda1_pin = <0x0>;
+			scl1_pin = <0x0>;
+			pin_func = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		i2c1 = "/fragment@0:target:0";
+		gpio = "/fragment@1:target:0";
+	};
+};

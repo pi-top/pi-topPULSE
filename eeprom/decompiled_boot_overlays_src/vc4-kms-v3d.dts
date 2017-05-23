@@ -1,0 +1,210 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+
+	fragment@0 {
+		target-path = "/chosen";
+
+		__overlay__ {
+			bootargs = "cma=256M@256M";
+		};
+	};
+
+	fragment@1 {
+		target-path = "/chosen";
+
+		__dormant__ {
+			bootargs = "cma=192M@256M";
+		};
+	};
+
+	fragment@2 {
+		target-path = "/chosen";
+
+		__dormant__ {
+			bootargs = "cma=128M@128M";
+		};
+	};
+
+	fragment@3 {
+		target-path = "/chosen";
+
+		__dormant__ {
+			bootargs = "cma=96M@128M";
+		};
+	};
+
+	fragment@4 {
+		target-path = "/chosen";
+
+		__dormant__ {
+			bootargs = "cma=64M@64M";
+		};
+	};
+
+	fragment@5 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@6 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@7 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@8 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			interrupts = <0x2 0xd>;
+			status = "okay";
+		};
+	};
+
+	fragment@9 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			interrupts = <0x2 0xe>;
+			status = "okay";
+		};
+	};
+
+	fragment@10 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			interrupts = <0x2 0xa>;
+			status = "okay";
+		};
+	};
+
+	fragment@11 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			interrupts = <0x2 0x1>;
+			status = "okay";
+		};
+	};
+
+	fragment@12 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			interrupts = <0x2 0x8 0x2 0x9>;
+			status = "okay";
+		};
+	};
+
+	fragment@13 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			interrupts = <0x1 0xa>;
+			status = "okay";
+		};
+	};
+
+	fragment@14 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@15 {
+		target-path = "/soc/dma";
+
+		__overlay__ {
+			brcm,dma-channel-mask = <0x7f35>;
+		};
+	};
+
+	fragment@16 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			panel@0 {
+				compatible = "raspberrypi,touchscreen";
+				reg = <0x0>;
+				raspberrypi,touchscreen-bridge = <0xdeadbeef>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@17 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@18 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@19 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			claim-clocks = <0x22 0x23 0xf 0x10>;
+		};
+	};
+
+	__overrides__ {
+		cma-256 = "", "", "", "", "+0-1-2-3-4";
+		cma-192 = "", "", "", "", "-0+1-2-3-4";
+		cma-128 = "", "", "", "", "-0-1+2-3-4";
+		cma-96 = "", "", "", "", "-0-1-2+3-4";
+		cma-64 = "", "", "", "", "-0-1-2-3+4";
+	};
+
+	__symbols__ {
+		pitouchscreen = "/fragment@16/__overlay__/panel@0";
+	};
+
+	__fixups__ {
+		i2c2 = "/fragment@5:target:0";
+		cprman = "/fragment@6:target:0";
+		fb = "/fragment@7:target:0";
+		pixelvalve0 = "/fragment@8:target:0";
+		pixelvalve1 = "/fragment@9:target:0";
+		pixelvalve2 = "/fragment@10:target:0";
+		hvs = "/fragment@11:target:0";
+		hdmi = "/fragment@12:target:0";
+		v3d = "/fragment@13:target:0";
+		gpu = "/fragment@14:target:0";
+		dsi1 = "/fragment@16:target:0";
+		pitouchscreen_bridge = "/fragment@16/__overlay__/panel@0:raspberrypi,touchscreen-bridge:0";
+		i2c_dsi = "/fragment@17:target:0";
+		vec = "/fragment@18:target:0";
+		clocks = "/fragment@19:target:0";
+	};
+};

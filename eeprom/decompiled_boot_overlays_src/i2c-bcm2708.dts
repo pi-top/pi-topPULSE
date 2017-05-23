@@ -1,0 +1,17 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			compatible = "brcm,bcm2708-i2c";
+		};
+	};
+
+	__fixups__ {
+		i2c_arm = "/fragment@0:target:0";
+	};
+};

@@ -1,0 +1,91 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target-path = "/clocks";
+
+		__overlay__ {
+
+			boss_osc {
+				compatible = "allo,dac-clk";
+				#clock-cells = <0x0>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			pcm5122@4d {
+				#sound-dai-cells = <0x0>;
+				compatible = "ti,pcm5122";
+				clocks = <0x1>;
+				reg = <0x4d>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			compatible = "allo,boss-dac";
+			i2s-controller = <0xdeadbeef>;
+			mute-gpios = <0xdeadbeef 0x6 0x1>;
+			status = "okay";
+			phandle = <0x2>;
+		};
+	};
+
+	__overrides__ {
+		24db_digital_gain = <0x2 0x616c6c6f 0x2c323464 0x625f6469 0x67697461 0x6c5f6761 0x696e3f00>;
+		slave = <0x2 0x616c6c6f 0x2c736c61 0x76653f00>;
+	};
+
+	__symbols__ {
+		boss_osc = "/fragment@0/__overlay__/boss_osc";
+		boss_dac = "/fragment@3/__overlay__";
+	};
+
+	__local_fixups__ {
+
+		fragment@2 {
+
+			__overlay__ {
+
+				pcm5122@4d {
+					clocks = <0x0>;
+				};
+			};
+		};
+
+		__overrides__ {
+			24db_digital_gain = <0x0>;
+			slave = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		i2s = "/fragment@1:target:0", "/fragment@3/__overlay__:i2s-controller:0";
+		i2c1 = "/fragment@2:target:0";
+		sound = "/fragment@3:target:0";
+		gpio = "/fragment@3/__overlay__:mute-gpios:0";
+	};
+};

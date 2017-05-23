@@ -1,0 +1,62 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			pcm5122@4c {
+				#sound-dai-cells = <0x0>;
+				compatible = "ti,pcm5122";
+				reg = <0x4c>;
+				AVDD-supply = <0xdeadbeef>;
+				DVDD-supply = <0xdeadbeef>;
+				CPVDD-supply = <0xdeadbeef>;
+				status = "okay";
+			};
+
+			tpa6130a2@60 {
+				compatible = "ti,tpa6130a2";
+				reg = <0x60>;
+				Vdd-supply = <0xdeadbeef>;
+				status = "okay";
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+			compatible = "jg,raspidacv3";
+			i2s-controller = <0xdeadbeef>;
+			status = "okay";
+		};
+	};
+
+	__symbols__ {
+		tpa6130a2 = "/fragment@1/__overlay__/tpa6130a2@60";
+	};
+
+	__fixups__ {
+		i2s = "/fragment@0:target:0", "/fragment@2/__overlay__:i2s-controller:0";
+		i2c1 = "/fragment@1:target:0";
+		vdd_3v3_reg = "/fragment@1/__overlay__/pcm5122@4c:AVDD-supply:0", "/fragment@1/__overlay__/pcm5122@4c:DVDD-supply:0", "/fragment@1/__overlay__/pcm5122@4c:CPVDD-supply:0", "/fragment@1/__overlay__/tpa6130a2@60:Vdd-supply:0";
+		sound = "/fragment@2:target:0";
+	};
+};

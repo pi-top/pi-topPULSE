@@ -1,0 +1,67 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target-path = [2f 00];
+
+		__overlay__ {
+
+			pps {
+				compatible = "pps-gpio";
+				pinctrl-names = "default";
+				pinctrl-0 = <0x1>;
+				gpios = <0xdeadbeef 0x12 0x0>;
+				status = "okay";
+				phandle = <0x2>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__overlay__ {
+
+			pps_pins {
+				brcm,pins = <0x12>;
+				brcm,function = <0x0>;
+				brcm,pull = <0x0>;
+				phandle = <0x1>;
+			};
+		};
+	};
+
+	__overrides__ {
+		gpiopin = <0x2 0x6770696f 0x733a3400 0x1 0x6272636d 0x2c70696e 0x733a3000>;
+		assert_falling_edge = [00 00 00 02 61 73 73 65 72 74 2d 66 61 6c 6c 69 6e 67 2d 65 64 67 65 3f 00];
+	};
+
+	__symbols__ {
+		pps = "/fragment@0/__overlay__/pps";
+		pps_pins = "/fragment@1/__overlay__/pps_pins";
+	};
+
+	__local_fixups__ {
+
+		fragment@0 {
+
+			__overlay__ {
+
+				pps {
+					pinctrl-0 = <0x0>;
+				};
+			};
+		};
+
+		__overrides__ {
+			gpiopin = <0x0 0xc>;
+			assert_falling_edge = <0x0>;
+		};
+	};
+
+	__fixups__ {
+		gpio = "/fragment@0/__overlay__/pps:gpios:0", "/fragment@1:target:0";
+	};
+};

@@ -1,0 +1,167 @@
+/dts-v1/;
+
+/ {
+	compatible = "brcm,bcm2708";
+
+	fragment@0 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			mux@70 {
+				compatible = "nxp,pca9542";
+				reg = <0x70>;
+				#address-cells = <0x1>;
+				#size-cells = <0x0>;
+				phandle = <0x1>;
+
+				i2c@0 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x0>;
+				};
+
+				i2c@1 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x1>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			mux@70 {
+				compatible = "nxp,pca9545";
+				reg = <0x70>;
+				#address-cells = <0x1>;
+				#size-cells = <0x0>;
+				phandle = <0x2>;
+
+				i2c@0 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x0>;
+				};
+
+				i2c@1 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x1>;
+				};
+
+				i2c@2 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x2>;
+				};
+
+				i2c@3 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x3>;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <0xdeadbeef>;
+
+		__dormant__ {
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+
+			mux@70 {
+				compatible = "nxp,pca9548";
+				reg = <0x70>;
+				#address-cells = <0x1>;
+				#size-cells = <0x0>;
+				phandle = <0x3>;
+
+				i2c@0 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x0>;
+				};
+
+				i2c@1 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x1>;
+				};
+
+				i2c@2 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x2>;
+				};
+
+				i2c@3 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x3>;
+				};
+
+				i2c@4 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x4>;
+				};
+
+				i2c@5 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x5>;
+				};
+
+				i2c@6 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x6>;
+				};
+
+				i2c@7 {
+					#address-cells = <0x1>;
+					#size-cells = <0x0>;
+					reg = <0x7>;
+				};
+			};
+		};
+	};
+
+	__overrides__ {
+		pca9542 = [00 00 00 00 2b 30 00];
+		pca9545 = [00 00 00 00 2b 31 00];
+		pca9548 = [00 00 00 00 2b 32 00];
+		addr = [00 00 00 01 72 65 67 3a 30 00 00 00 00 02 72 65 67 3a 30 00 00 00 00 03 72 65 67 3a 30 00];
+	};
+
+	__symbols__ {
+		pca9542 = "/fragment@0/__dormant__/mux@70";
+		pca9545 = "/fragment@1/__dormant__/mux@70";
+		pca9548 = "/fragment@2/__dormant__/mux@70";
+	};
+
+	__local_fixups__ {
+
+		__overrides__ {
+			addr = <0x0 0xa 0x14>;
+		};
+	};
+
+	__fixups__ {
+		i2c_arm = "/fragment@0:target:0", "/fragment@1:target:0", "/fragment@2:target:0";
+	};
+};
