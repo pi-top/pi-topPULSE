@@ -1,3 +1,4 @@
+// Definitions for HiFiBerry DAC
 /dts-v1/;
 /plugin/;
 
@@ -5,13 +6,29 @@
     compatible = "brcm,bcm2708";
 
     fragment@0 {
-        target = <&leds>;
+        target = <&i2s>;
         __overlay__ {
-            my_led: myled {
-                label = "MYLED";
-                gpios = <&gpio 18 0>;
-                linux,default-trigger = "heartbeat";
+            status = "okay";
+        };
+    };
+
+    fragment@1 {
+        target-path = "/";
+        __overlay__ {
+            pcm5102a-codec {
+                #sound-dai-cells = <0>;
+                compatible = "ti,pcm5102a";
+                status = "okay";
             };
+        };
+    };
+
+    fragment@2 {
+        target = <&sound>;
+        __overlay__ {
+            compatible = "pi-top,pt-pulse";
+            i2s-controller = <&i2s>;
+            status = "okay";
         };
     };
 };
