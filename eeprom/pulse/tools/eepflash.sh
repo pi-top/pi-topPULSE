@@ -75,17 +75,17 @@ elif [ "$TYPE" = "NOT_SET" ]; then
 	exit 1
 fi
 
-echo "This will attempt to talk to an eeprom at i2c address 0x50. Make sure there is an eeprom at this address."
-echo "This script comes with ABSOLUTELY no warranty. Continue only if you know what you are doing."
+# echo "This will attempt to talk to an eeprom at i2c address 0x50. Make sure there is an eeprom at this address."
+# echo "This script comes with ABSOLUTELY no warranty. Continue only if you know what you are doing."
 
-while true; do
-	read -p "Do you wish to continue? (yes/no): " yn
-	case $yn in
-		yes | Yes ) break;;
-		no | No ) exit;;
-		* ) echo "Please type yes or no.";;
-	esac
-done
+# while true; do
+# 	read -p "Do you wish to continue? (yes/no): " yn
+# 	case $yn in
+# 		yes | Yes ) break;;
+# 		no | No ) exit;;
+# 		* ) echo "Please type yes or no.";;
+# 	esac
+# done
 
 modprobe i2c_dev
 if [ -e "/dev/i2c-0" ]; then
