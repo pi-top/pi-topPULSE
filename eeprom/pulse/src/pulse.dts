@@ -5,6 +5,7 @@
 / {
     compatible = "brcm,bcm2708";
 
+    /* Taken from hifiberry-dac-overlay.dts */
     fragment@0 {
         target = <&i2s>;
         __overlay__ {
@@ -29,6 +30,39 @@
             compatible = "pi-top,pt-pulse";
             i2s-controller = <&i2s>;
             status = "okay";
+        };
+    };
+
+    /* Taken from pi3-disable-bt-overlay.dts/pi3-miniuart-bt-overlay.dts */
+    fragment@3 {
+        target = <&uart0>;
+        __overlay__ {
+            pinctrl-names = "default";
+            pinctrl-0 = <&uart0_pins>;
+            status = "okay";
+        };
+    };
+
+    /* Modified from pi3-miniuart-bt-overlay.dts */
+    /* Function 4 for UART0; was previously 2 for UART1 */
+    
+    /*
+    fragment@4 {
+        target = <&uart0_pins>;
+        __overlay__ {
+            brcm,pins = <32 33>;
+            brcm,function = <4>; /* alt0=UART0 */
+            brcm,pull = <0 2>;
+        };
+    };
+     */
+    
+    fragment@4 {
+        target = <&uart0_pins>;
+        __overlay__ {
+            brcm,pins;
+            brcm,function;
+            brcm,pull;
         };
     };
 };
