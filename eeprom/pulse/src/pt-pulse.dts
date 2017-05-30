@@ -5,6 +5,7 @@
 / {
     compatible = "brcm,bcm2708";
 
+
     /* Taken from hifiberry-dac-overlay.dts */
     fragment@0 {
         target = <&i2s>;
@@ -12,6 +13,7 @@
             status = "okay";
         };
     };
+
 
     fragment@1 {
         target-path = "/";
@@ -24,6 +26,7 @@
         };
     };
 
+
     fragment@2 {
         target = <&sound>;
         __overlay__ {
@@ -33,8 +36,27 @@
         };
     };
 
-    /* Taken from pi3-disable-bt-overlay.dts/pi3-miniuart-bt-overlay.dts */
+
+    /* Modified from rpi-sense.dts */
+    /* (We use the same chip) */
     fragment@3 {
+        target = <&i2c1>;
+        __overlay__ {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            status = "okay";
+
+            pt-pulse-rass@24 {
+                compatible = "pi-top,pt-pulse-rass";
+                reg = <0x24>;
+                status = "okay";
+            };
+        };
+    };
+
+
+    /* Taken from pi3-disable-bt-overlay.dts/pi3-miniuart-bt-overlay.dts */
+    fragment@4 {
         target = <&uart0>;
         __overlay__ {
             pinctrl-names = "default";
@@ -43,23 +65,17 @@
         };
     };
 
+
     /* Modified from pi3-miniuart-bt-overlay.dts */
     /* Function 4 for UART0; was previously 2 for UART1 */
-    
-    /*
-    fragment@4 {
+    fragment@5 {
         target = <&uart0_pins>;
         __overlay__ {
+        /*
             brcm,pins = <32 33>;
             brcm,function = <4>; /* alt0=UART0 */
             brcm,pull = <0 2>;
-        };
-    };
-     */
-    
-    fragment@4 {
-        target = <&uart0_pins>;
-        __overlay__ {
+        */
             brcm,pins;
             brcm,function;
             brcm,pull;
