@@ -15,6 +15,7 @@ capture_sample_rate    = 20050
 capture_bit_rate       = 8
 audio_dir              = 'audio'
 audio_filename         = 'output.wav'
+output_audio_filename  = 'alexa.mpg'
 temp_audio_filename    = audio_filename + '.tmp'
 baud_rate              = 250000
 metadata_filename      = "metadata.json"
@@ -456,52 +457,36 @@ def get_alexa_auth_token():
 
 def upload_to_alexa_and_save_response_to_file():
     print("Uploading audio to Alexa...")
-    endpoint = "https://access-alexa-na.amazon.com/v1/avs/speechrecognizer/recognize"
 
-    # metadata.json already has "format": "audio/L16; rate=16000; channels=1"
-        # can we remove this here?
-        # what about removing the metadata.json file instead?
-    r = requests.post(
-        endpoint,
-        headers = {
-            "Authorization": "Bearer " + ACCESS_TOKEN
-        },
-        files = {
-            "metadata": (metadata_filename, open(metadata_filepath, "rb"), "application/json; charset=UTF-8"),
-            "audio": (audio_filename, open(audio_filepath, "rb"), "audio/L16; rate=16000; channels=1")
-        }
-    )
-
-    if r.status_code != 200:
-        print("ERROR!")
-        resp = r.json()
-        error_obj = resp['error']
-        error_code = error_obj['code']
-        error_msg = error_obj['message']
-        print("\t" + error_code)
-        print("\t" + error_msg)
-        sys.exit()
-
-    print("Processing Alexa response...")
-
-    with open(response_filepath, 'wb') as handle:
-        for block in r.iter_content(1024):
-            handle.write(block)
-
+    script_path = os.path.dirname(os.path.realpath(__file__)) + '/scripts/uploadToAlexaAndSaveResponse.sh'
+    resp = subprocess.call([script_path, ACCESS_TOKEN, audio_filepath, metadata_filepath, response_filepath])
 
 def listen_to_alexa_response():
-    cat = subprocess.Popen(('cat', response_filepath), stdout=subprocess.PIPE)
-    hmp = subprocess.Popen(('http-message-parser', '--pick=multipart[1].body'), stdin=cat.stdout, stdout=subprocess.PIPE)
-    output = subprocess.call(('mpg123', '-'), stdin=hmp.stdout)
+
+    # Process the response to extract just the audio data
+    start_writing = False
+    audio_file = open(output_audio_filepath, 'w')
+    with open(response_filepath) as input_file:
+        for line in input_file:
+            if start_writing:
+                if line != "" and not line.startswith("--"):
+                    audio_file.write(line)
+            else:
+                if "Content-Type: audio/mpeg" in line:
+                    start_writing = True
+
+    cat = subprocess.Popen(('cat', output_audio_filepath), stdout=subprocess.PIPE)
+    subprocess.call(('mpg123', '-'), stdin=cat.stdout)
+
     cat.wait()
-    hmp.wait()
 
 
 # Internal variables
-audio_filepath      = DIR + "/" + audio_dir + "/" + audio_filename
-temp_audio_filepath = DIR + "/" + audio_dir + "/" + temp_audio_filename
-metadata_filepath   = DIR + "/" + metadata_filename
-response_filepath   = DIR + "/" + response_filename
+output_audio_filepath   = DIR + "/" + audio_dir + "/" + output_audio_filename
+audio_filepath          = DIR + "/" + audio_dir + "/" + audio_filename
+temp_audio_filepath     = DIR + "/" + audio_dir + "/" + temp_audio_filename
+metadata_filepath       = DIR + "/" + metadata_filename
+response_filepath       = DIR + "/" + response_filename
 
 ACCESS_TOKEN = ""
 
