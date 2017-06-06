@@ -4,8 +4,7 @@ import ptpulse
 import time
 
 led_matrix = ptpulse.ledmatrix
-led_matrix.set_all(144,144,144)
-led_matrix.show()
+led_matrix.run_tests()
 
 mic = ptpulse.microphone
 mic.record()

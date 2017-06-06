@@ -1,3 +1,22 @@
+# microphone.py (pi-topPULSE) 
+# Copyright (C) 2017  CEED ltd.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+#
+
 import signal
 import os
 import serial
@@ -21,18 +40,15 @@ _sample_rate = 22050
 #######################
 
 def _debug_print(message):
-	"""
-	INTERNAL.
-	"""
+	"""INTERNAL. Print messages if debug mode enabled."""
 
 	if _debug == True:
 		print(message)	
 
 
 def _signal_handler(signal, frame):
-	"""
-	INTERNAL. Handles signals from the OS
-	"""
+	"""INTERNAL. Handles signals from the OS."""
+
 	global _exiting
 
 	if _exiting == False:
@@ -46,42 +62,35 @@ def _signal_handler(signal, frame):
 	
 
 def _get_size(filename):
-	"""
-	INTERNAL. Gets the size of a file
-	"""
+	"""INTERNAL. Gets the size of a file."""
 
 	file_stats = os.stat(filename)
 	return file_stats.st_size
 
 
 def _from_hex(value):
-	"""
-	INTERNAL. Gets a bytearray from hex data
-	"""
+	"""INTERNAL. Gets a bytearray from hex data."""
 
 	return bytearray.fromhex(value)
 
 
 def space_separated_little_endian_hex(integer_value):
-	"""
-	INTERNAL. Get an integer in format for WAV file header
-	"""
+	"""INTERNAL. Get an integer in format for WAV file header."""
 
 	temp = struct.pack('<i', integer_value).encode('hex')
 	return ' '.join([temp[i:i+2] for i in range(0, len(temp), 2)])
 
 
 def _init_header_information():
-	"""
-	INTERNAL. Create a WAV file header
-	"""
+	"""INTERNAL. Create a WAV file header."""
+
+	# LE = little endian
+	# xB = x bytes
 
 	RIFF = "52 49 46 46"
 	WAVE = "57 41 56 45"
 	fmt = "66 6d 74 20"
 	DATA = "64 61 74 61"
-	# LE = little endian
-	# xB = x bytes
 	eight_2B_LE = "08 00"
 	sixteen_4B_LE = "10 00 00 00"
 	one_2B_LE = "01 00"
@@ -108,9 +117,7 @@ def _init_header_information():
 
 
 def _update_header_in_file(file, position, value):
-	"""
-	INTERNAL. Update the WAV header
-	"""
+	"""INTERNAL. Update the WAV header	"""
 
 	hex_value = space_separated_little_endian_hex(value)
 	file.seek(position)
@@ -118,9 +125,7 @@ def _update_header_in_file(file, position, value):
 
 
 def _finalise_wav_file(file_path):
-	"""
-	INTERNAL. Update the WAV file header with the size of the data
-	"""
+	"""INTERNAL. Update the WAV file header with the size of the data."""
 
 	size_of_data = _get_size(file_path) - 44
 
@@ -137,17 +142,14 @@ def _finalise_wav_file(file_path):
 
 
 def _thread_method():
-	"""
-	INTERNAL.
-	"""
+	"""INTERNAL. Thread method."""
 
 	_record_audio()
 
 
 def _record_audio():
-	"""
-	INTERNAL. Open the serial port and capture audio data into a temp file
-	"""
+	"""INTERNAL. Open the serial port and capture audio data into a temp file."""
+
 	global _temp_file_path
 
 	temp_file_tuple = mkstemp()
@@ -204,7 +206,7 @@ def _record_audio():
 #######################
 
 def record():
-	"""Start recording on the pi-topPULSE microphone"""
+	"""Start recording on the pi-topPULSE microphone."""
 
 	global _thread_running
 	global _continue_writing
@@ -231,7 +233,7 @@ def stop():
 	
 
 def save(file_path, overwrite=False):
-	"""Saves recorded audio to a file"""
+	"""Saves recorded audio to a file."""
 
 	global _temp_file_path
 

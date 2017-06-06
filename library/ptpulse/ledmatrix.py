@@ -1,4 +1,4 @@
-# ptpulse.py
+# ledmatrix.py (pi-topPULSE)
 # Copyright (C) 2017  CEED ltd.
 #
 # This program is free software; you can redistribute it and/or
@@ -41,16 +41,16 @@ _running = False
 _show_enabled = True
 
 _gamma_correction_arr = [
-    0,     0,   0,   0,   0,   0,   0,   0,
-    0,     0,   0,   0,   0,   0,   0,   0,
-    0,     0,   0,   0,   0,   0,   0,   0,
-    0,     0,   0,   0,   1,   1,   1,   1,
-    1,     1,   1,   1,   1,   1,   1,   1,
-    1,     2,   2,   2,   2,   2,   2,   2,
-    2,     3,   3,   3,   3,   3,   3,   3,
-    4,     4,   4,   4,   4,   5,   5,   5,
-    5,     6,   6,   6,   6,   7,   7,   7,
-    7,     8,   8,   8,   9,   9,   9,  10,
+    0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   1,   1,   1,   1,
+    1,   1,   1,   1,   1,   1,   1,   1,
+    1,   2,   2,   2,   2,   2,   2,   2,
+    2,   3,   3,   3,   3,   3,   3,   3,
+    4,   4,   4,   4,   4,   5,   5,   5,
+    5,   6,   6,   6,   6,   7,   7,   7,
+    7,   8,   8,   8,   9,   9,   9,  10,
     10,   10,  11,  11,  11,  12,  12,  13,
     13,   13,  14,  14,  15,  15,  16,  16,
     17,   17,  18,  18,  19,  19,  20,  20,
@@ -116,9 +116,7 @@ _pixel_map = deepcopy(_empty_map)
 #######################
 
 def _initialise():
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Initialise the matrix."""
 
     global _initialised
     global _serial_device
@@ -129,31 +127,27 @@ def _initialise():
             err_str = "Could not find serial port - are you sure it's enabled?"
             raise serial.serialutil.SerialException(err_str)
 
-        print ("Opening serial port...")
+        _debug_print("Opening serial port...")
 
         _serial_device = serial.Serial("/dev/serial0", baudrate = 250000, timeout = 2)
 
         if _serial_device.isOpen():
-            print ("OK.")
+            _debug_print ("OK.")
         else:
-            print ("Failed!")
+            print("Error: Failed to open serial port!")
 
         _initialised = True
 
 
 def _debug_print(message):
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Print messages if debug mode enabled."""
 
     if _debug == True:
-        print (message)    
+        print(message)
 
 
 def _signal_handler(signal, frame):
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Handles signals from the OS to exit."""
 
     print("\nQuitting...")
 
@@ -163,9 +157,7 @@ def _signal_handler(signal, frame):
 
 
 def _get_avg_colour():
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Get the average color of the matrix."""
 
     total_rgb = [0, 0, 0]
     avg_rgb = [0, 0, 0]
@@ -183,9 +175,7 @@ def _get_avg_colour():
 
 
 def _write(data):
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Write data to the matrix."""
 
     _debug_print ('{s0:<4}{s1:<4}{s2:<4}{s3:<4}{s4:<4}{s5:<4}{s6:<4}{s7:<4}{s8:<4}{s9:<4}{s10:<4}'.format(s0=data[0], s1=data[1], s2=data[2], s3=data[3], s4=data[4], s5=data[5], s6=data[6], s7=data[7], s8=data[8], s9=data[9], s10=data[10]))
     _serial_device.write(data)
@@ -193,21 +183,17 @@ def _write(data):
     
 
 def _get_gamma_corrected_value(original_value):
-    """
-    INTERNAL. Converts a brightness value from 0-255
+    """INTERNAL. Converts a brightness value from 0-255
     to the value that produces an approximately linear
-    scaling to the human eye.
-    """
+    scaling to the human eye."""
     
     return _gamma_correction_arr[original_value]
 
 
 def _scale_pixel_to_brightness(original_value):
-    """
-    INTERNAL. Multiplies intended brightness of
+    """INTERNAL. Multiplies intended brightness of
     a pixel by brightness scaling factor to generate
-    an adjusted value.
-    """
+    an adjusted value."""
     
     unrounded_new_brightness = original_value * _brightness
     rounded_new_brightness = round(unrounded_new_brightness)
@@ -217,9 +203,7 @@ def _scale_pixel_to_brightness(original_value):
 
 
 def _get_rotated_pixel_map():
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Get a rotated copy of the current in-memory pixel map."""
     
     rotated_pixel_map = deepcopy(_pixel_map)
 
@@ -233,9 +217,7 @@ def _get_rotated_pixel_map():
 
 
 def _brightness_correct(original_value):
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Correct a single color for brightness."""
     
     brightness_scaled = _scale_pixel_to_brightness(original_value)
     new_value = _get_gamma_corrected_value(brightness_scaled)
@@ -244,9 +226,7 @@ def _brightness_correct(original_value):
 
 
 def _adjust_r_g_b_for_brightness_correction(r, g, b):
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Correct LED for brightness."""
     
     r = _brightness_correct(r)
     g = _brightness_correct(g)
@@ -256,9 +236,8 @@ def _adjust_r_g_b_for_brightness_correction(r, g, b):
 
 
 def _sync_with_device():
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Send the sync frame to tell the device that LED 
+    data is expected."""
     
     _initialise()
     _debug_print("Sync data:")
@@ -266,9 +245,7 @@ def _sync_with_device():
 
 
 def _rgb_to_bytes_to_send(rgb):
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Format the LED data in the device-specific layout."""
 
     # Create three 5-bit colour vals, splitting the green bits 
     # into two parts (hardware spec):
@@ -291,9 +268,7 @@ def _rgb_to_bytes_to_send(rgb):
 
 
 def _timer_method():
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Run by the timer on each tick."""
 
     global _running
     global _update_rate
@@ -304,9 +279,7 @@ def _timer_method():
 
 
 def _flip(direction):
-    """
-    INTERNAL.
-    """
+    """INTERNAL. Flip the pixel map."""
 
     global _pixel_map
     
@@ -325,9 +298,7 @@ def _flip(direction):
 
 
 def _set_show_state(enabled):
-    """
-    INTERNAL.
-    """
+    """INTERNAL."""
     
     global _show_enabled
     
@@ -338,17 +309,13 @@ def _set_show_state(enabled):
 
 
 def _enable_show_state():
-    """
-    INTERNAL.
-    """
+    """INTERNAL."""
 
     _set_show_state(True)
 
 
 def _disable_show_state():
-    """
-    INTERNAL.
-    """
+    """INTERNAL."""
 
     _set_show_state(True)
 
@@ -358,9 +325,9 @@ def _disable_show_state():
 #######################
 
 def brightness(new_brightness):
-    """Set the display brightness between 0.0 and 1.0
-    :param b: Brightness from 0.0 to 1.0 (default 1.0)
-    """
+    """Set the display brightness between 0.0 and 1.0.
+        :param new_brightness: Brightness from 0.0 to 1.0 (default 1.0)"""
+
     global _brightness
 
     
@@ -370,9 +337,8 @@ def brightness(new_brightness):
 
 
 def get_brightness():
-    """Get the display brightness value
-    Returns a float between 0.0 and 1.0
-    """
+    """Get the display brightness value. Returns a float between 0.0 and 1.0."""
+
     global _brightness
 
     
@@ -380,11 +346,10 @@ def get_brightness():
 
 
 def rotation(new_rotation=0):
-    """Set the display rotation
-    :param r: Specify the rotation in degrees: 0, 90, 180 or 270
-    """
-    global _rotation
+    """Set the display rotation.
+    :param new_rotation: Specify the rotation in degrees: 0, 90, 180 or 270"""
 
+    global _rotation
     
     if new_rotation in [0, 90, 180, 270]:
         _rotation = new_rotation
@@ -394,36 +359,35 @@ def rotation(new_rotation=0):
 
 
 def flip_h():
-    """Flips the grid horizontally"""
+    """Flips the grid horizontally."""
 
     _flip("h")
 
 
 def flip_v():
-    """Flips the grid vertically"""
+    """Flips the grid vertically."""
 
     _flip("v")
 
 
 def get_shape():
-    """Returns the shape (width, height) of the display"""
+    """Returns the shape (width, height) of the display."""
 
     return (_w, _h)
 
 
 def get_pixel(x, y):
-    """Get the RGB value of a single pixel
+    """Get the RGB value of a single pixel.
     :param x: Horizontal position from 0 to 7
     :param y: Veritcal position from 0 to 7"""
 
     global _pixel_map
-
     
     return _pixel_map[x][y]
 
 
 def set_pixel(x, y, r, g, b):
-    """Set a single pixel to RGB colour
+    """Set a single pixel to RGB colour.
     :param x: Horizontal position from 0 to 7
     :param y: Veritcal position from 0 to 7
     :param r: Amount of red from 0 to 255
@@ -437,10 +401,9 @@ def set_pixel(x, y, r, g, b):
 
 
 def set_all(r, g, b):
-    """Set all pixels to a specific colour"""
+    """Set all pixels to a specific colour."""
 
     global _pixel_map
-
     
     for x in range(_w):
         for y in range(_h):
@@ -451,12 +414,11 @@ def set_all(r, g, b):
 
 
 def show():
-    """Update pi-topPULSE with the contents of the display buffer"""
+    """Update pi-topPULSE with the contents of the display buffer."""
 
     global _pixel_map
     global _rotation
     global _show_enabled
-
     
     wait_counter = 0
 
@@ -474,7 +436,7 @@ def show():
             wait_counter = wait_counter + 1
 
     if attempt_to_show_early:
-        print("pi-topPULSE LEDs re-enabled.")
+        _debug_print("pi-topPULSE LEDs re-enabled.")
 
     _sync_with_device()
 
@@ -512,7 +474,7 @@ def show():
 
 
 def clear():
-    """Clear the buffer"""
+    """Clear the buffer."""
 
     global _pixel_map
     
@@ -520,8 +482,7 @@ def clear():
 
 
 def off():
-    """Clear the buffer and immediately update pi-topPULSE
-    Turns off all pixels."""
+    """Clear the buffer and immediately update pi-topPULSE."""
     
     clear()
     show()
@@ -530,7 +491,6 @@ def run_tests():
     """Runs a series of tests to check the LED board is working as expected."""
 
     off()
-    time.sleep(0.5)
 
     #------------------------------
     # Pixels
@@ -554,7 +514,7 @@ def run_tests():
                 counter = counter + 1
         off()
 
-    time.sleep(0.5)
+    time.sleep(0.2)
 
     #------------------------------
     # Rows and rotation
@@ -571,7 +531,7 @@ def run_tests():
                 time.sleep(0.05)
 
     off()
-    time.sleep(0.5)
+    time.sleep(0.2)
 
     #------------------------------
     # Brightness
@@ -590,10 +550,9 @@ def run_tests():
         time.sleep(0.01)
 
     off()
-
     brightness(1.0)
-
-    time.sleep(0.5)
+    
+    time.sleep(0.2)
 
     #------------------------------
     # Flipping
@@ -606,7 +565,7 @@ def run_tests():
     set_pixel(int(_w / 4), int(_h / 4), 0, 255, 0)
 
     show()
-    time.sleep(0.5)        
+    time.sleep(0.5)  
 
     for f in range(4):
         for x in range(2):
@@ -618,13 +577,13 @@ def run_tests():
             time.sleep(0.5)
 
     off()
-    time.sleep(0.5)
+    time.sleep(0.2)
 
     #------------------------------
     # Conway - auto refresh 
     #------------------------------
 
-    start(0.2)
+    start(0.1)
 
     life_map = [[0, 0, 0, 0, 0, 0, 0],
                 [0, 1, 0, 0, 0, 0, 0],
@@ -663,14 +622,14 @@ def run_tests():
                 else:
                     set_pixel(x, y, 0, 128, 0)
 
-        time.sleep(0.2)
+        time.sleep(0.1)
 
     stop()
     off()
 
 
 def start(new_update_rate=0.1):
-    """Starts a timer to automatically refresh the LEDs"""
+    """Starts a timer to automatically refresh the LEDs."""
 
     global _update_rate
     global _running
@@ -686,7 +645,7 @@ def start(new_update_rate=0.1):
 
 
 def stop():
-    """Stops the timer that automatically refreshes the LEDs"""
+    """Stops the timer that automatically refreshes the LEDs."""
 
     global _running
     global _auto_refresh_timer
