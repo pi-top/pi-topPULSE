@@ -515,7 +515,6 @@ def clear():
     """Clear the buffer"""
 
     global _pixel_map
-
     
     _pixel_map = deepcopy(_empty_map)
 
@@ -523,7 +522,6 @@ def clear():
 def off():
     """Clear the buffer and immediately update pi-topPULSE
     Turns off all pixels."""
-
     
     clear()
     show()
@@ -531,8 +529,7 @@ def off():
 def run_tests():
     """Runs a series of tests to check the LED board is working as expected."""
 
-    clear()
-    show()
+    off()
     time.sleep(0.5)
 
     #------------------------------
@@ -555,8 +552,7 @@ def run_tests():
                 show()
                 time.sleep(0.05)
                 counter = counter + 1
-        clear()
-        show()
+        off()
 
     time.sleep(0.5)
 
@@ -574,8 +570,7 @@ def run_tests():
                 show()
                 time.sleep(0.05)
 
-    clear()
-    show()
+    off()
     time.sleep(0.5)
 
     #------------------------------
@@ -594,8 +589,7 @@ def run_tests():
         show()
         time.sleep(0.01)
 
-    clear()
-    show()
+    off()
 
     brightness(1.0)
 
@@ -623,8 +617,7 @@ def run_tests():
             show()
             time.sleep(0.5)
 
-    clear()
-    show()
+    off()
     time.sleep(0.5)
 
     #------------------------------
@@ -673,9 +666,8 @@ def run_tests():
         time.sleep(0.2)
 
     stop()
+    off()
 
-    clear()
-    show()
 
 def start(new_update_rate=0.1):
     """Starts a timer to automatically refresh the LEDs"""
