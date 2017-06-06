@@ -502,7 +502,7 @@ def run_tests():
         rotation(90 * r)
         for x in range(_w):
             for y in range(_h):
-                rad = math.radians((counter / (4 * _w * _h)) * 360)
+                rad = math.radians((float(counter) / (4 * _w * _h)) * 360)
 
                 r = int((math.sin(rad) * 127) + 127)
                 g = int((math.cos(rad) * 127) + 127)
