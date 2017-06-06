@@ -9,6 +9,6 @@ led_matrix.show()
 
 mic = ptpulse.microphone
 mic.record()
-time.sleep(5)
+time.sleep(10)
 mic.stop()
 mic.save("/tmp/test.wav", True)

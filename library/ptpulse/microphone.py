@@ -3,6 +3,7 @@ import os
 import serial
 import time
 import struct
+import sys
 from tempfile import mkstemp
 from threading import Thread
 
@@ -32,12 +33,12 @@ def _signal_handler(signal, frame):
 	"""
 	INTERNAL. Handles signals from the OS
 	"""
+	global _exiting
 
 	if _exiting == False:
 		_exiting = True
 
 		if _thread_running == True:
-			print("\nSignal received, stopping recording...")	
 			stop()
 	
 	print("\nQuitting...")
@@ -178,10 +179,11 @@ def _record_audio():
 
 					while _continue_writing:
 						while not serial_device.inWaiting():
-							time.sleep(0.001)
+							time.sleep(0.01)
 						
 						audio_output = serial_device.read(serial_device.inWaiting())
 						file.write(audio_output)
+						time.sleep(0.1)
 
 			finally:
 				serial_device.close()
