@@ -22,20 +22,23 @@ import serial
 import signal
 import sys
 import time
+import math
 from copy import deepcopy
 from threading import Timer
 
 _initialised = False
+_debug = False
 
 _w = 7
 _h = 7
 _rotation = 0
-_brightness = 1
+_brightness = 1.0
 
 _max_freq = 50  # Maximum update speed is 50 times per second
 _update_rate = 0.1
 
 _running = False
+_show_enabled = True
 
 _gamma_correction_arr = [
     0,     0,   0,   0,   0,   0,   0,   0,
@@ -106,43 +109,88 @@ _empty_map = [
     [_empty, _empty, _empty, _empty, _empty, _empty, _empty]
 ]
 
-_pixel_map = _empty_map
-
+_pixel_map = deepcopy(_empty_map)
 
 #######################
 # INTERNAL OPERATIONS #
 #######################
+
 def _initialise():
+    """
+    INTERNAL.
+    """
+
     global _initialised
+    global _serial_device
+    global _pixel_map
+    
     if not _initialised:
         if not os.path.exists('/dev/serial0'):
             err_str = "Could not find serial port - are you sure it's enabled?"
             raise serial.serialutil.SerialException(err_str)
-        serial = serial.Serial('/dev/serial0', 250000, serial.EIGHTBITS,
-                               serial.PARITY_NONE, serial.STOPBITS_ONE)
-        serial.isOpen()
-        _initialised = true
+
+        print ("Opening serial port...")
+
+        _serial_device = serial.Serial("/dev/serial0", baudrate = 250000, timeout = 2)
+
+        if _serial_device.isOpen():
+            print ("OK.")
+        else:
+            print ("Failed!")
+
+        _initialised = True
+
+
+def _debug_print(message):
+    """
+    INTERNAL.
+    """
+
+    if _debug == True:
+        print (message)    
+
+
+def _signal_handler(signal, frame):
+    """
+    INTERNAL.
+    """
+
+    print("\nQuitting...")
+
+    stop()
+    off()
+    sys.exit(0)
 
 
 def _get_avg_colour():
-    pix_count = _w * _h
+    """
+    INTERNAL.
+    """
+
     total_rgb = [0, 0, 0]
-
-    for i, pix_rgb in enumerate(_pixel_map):
-        for i, val in enumerate(pix_rgb):
-            total_rgb[i] += val
-
     avg_rgb = [0, 0, 0]
+
+    counter = 0
+    for x in range(_w):
+        for y in range(_h):
+            for c in range(3):
+                total_rgb[c] = total_rgb[c] + _pixel_map[x][y][c]
+
     for i, val in enumerate(total_rgb):
-        avg_rgb[i] = round(val / pix_count)
+        avg_rgb[i] = int(round(val / (_w * _h)))
 
     return avg_rgb
 
 
 def _write(data):
-    serial.write(data)
-    time.sleep(0.00059)
+    """
+    INTERNAL.
+    """
 
+    _debug_print ('{s0:<4}{s1:<4}{s2:<4}{s3:<4}{s4:<4}{s5:<4}{s6:<4}{s7:<4}{s8:<4}{s9:<4}{s10:<4}'.format(s0=data[0], s1=data[1], s2=data[2], s3=data[3], s4=data[4], s5=data[5], s6=data[6], s7=data[7], s8=data[8], s9=data[9], s10=data[10]))
+    _serial_device.write(data)
+    time.sleep(0.002)
+    
 
 def _get_gamma_corrected_value(original_value):
     """
@@ -150,7 +198,7 @@ def _get_gamma_corrected_value(original_value):
     to the value that produces an approximately linear
     scaling to the human eye.
     """
-    global _gamma_correction_arr
+    
     return _gamma_correction_arr[original_value]
 
 
@@ -160,10 +208,11 @@ def _scale_pixel_to_brightness(original_value):
     a pixel by brightness scaling factor to generate
     an adjusted value.
     """
-    global _brightness
+    
     unrounded_new_brightness = original_value * _brightness
     rounded_new_brightness = round(unrounded_new_brightness)
     int_new_brightness = int(rounded_new_brightness)
+
     return int_new_brightness
 
 
@@ -171,9 +220,9 @@ def _get_rotated_pixel_map():
     """
     INTERNAL.
     """
-    global _pixel_map
+    
+    rotated_pixel_map = deepcopy(_pixel_map)
 
-    rotated_pixel_map = _pixel_map
     for x in range((int(_rotation / 90) + 3) % 4):
         if sys.version_info >= (3, 0):
             rotated_pixel_map = list(zip(*rotated_pixel_map[::-1]))
@@ -187,8 +236,10 @@ def _brightness_correct(original_value):
     """
     INTERNAL.
     """
+    
     brightness_scaled = _scale_pixel_to_brightness(original_value)
     new_value = _get_gamma_corrected_value(brightness_scaled)
+
     return new_value
 
 
@@ -196,6 +247,7 @@ def _adjust_r_g_b_for_brightness_correction(r, g, b):
     """
     INTERNAL.
     """
+    
     r = _brightness_correct(r)
     g = _brightness_correct(g)
     b = _brightness_correct(b)
@@ -207,51 +259,63 @@ def _sync_with_device():
     """
     INTERNAL.
     """
-    global _sync
+    
     _initialise()
+    _debug_print("Sync data:")
     _write(_sync)
 
 
 def _rgb_to_bytes_to_send(rgb):
+    """
+    INTERNAL.
+    """
+
+    # Create three 5-bit colour vals, splitting the green bits 
+    # into two parts (hardware spec):
     # |XX|G0|G1|R0|R1|R2|R3|R4|
     # |G2|G3|G4|B0|B1|B2|B3|B4|
-    # Create 5-bit colour vals; split green into two
+    
     r = rgb[0]
     g = rgb[1]
     b = rgb[2]
+    
     byte0 = (r >> 3) & 0x1F
     byte1 = (b >> 3) & 0x1F
     grnb0 = (g >> 1) & 0x60
     grnb1 = (g << 2) & 0xE0
-    # Combine into two bytes (5-5-5 colour)
+    
     byte0 = (byte0 | grnb0) & 0xFF
     byte1 = (byte1 | grnb1) & 0xFF
 
     return byte0, byte1
 
 
-def _show_automatically():
+def _timer_method():
     """
     INTERNAL.
     """
+
     global _running
     global _update_rate
+
     while _running:
         show()
         time.sleep(_update_rate)
 
 
 def _flip(direction):
-    global _pixel_map
-    global _h
-    global _w
+    """
+    INTERNAL.
+    """
 
+    global _pixel_map
+    
     flipped_pixel_map = deepcopy(_pixel_map)
     for x in range(_w):
         for y in range(_h):
             if direction is "h":
                 flipped_pixel_map[x][y] = _pixel_map[(_w-1)-x][y]
-            elif direction is "h":
+            elif direction is "v":
                 flipped_pixel_map[x][y] = _pixel_map[x][(_h-1)-y]
             else:
                 err = 'Flip direction must be [h]orizontal or [v]ertical only'
@@ -261,30 +325,45 @@ def _flip(direction):
 
 
 def _set_show_state(enabled):
-    global show_enabled
-    show_enabled = enabled
+    """
+    INTERNAL.
+    """
+    
+    global _show_enabled
+    
+    _show_enabled = enabled
 
-    if !show_enabled:
+    if not _show_enabled:
         _temp_disable_t.start()
 
 
 def _enable_show_state():
-    _set_show_state(true)
+    """
+    INTERNAL.
+    """
+
+    _set_show_state(True)
 
 
 def _disable_show_state():
-    _set_show_state(true)
+    """
+    INTERNAL.
+    """
+
+    _set_show_state(True)
 
 
 #######################
 # EXTERNAL OPERATIONS #
 #######################
+
 def brightness(new_brightness):
     """Set the display brightness between 0.0 and 1.0
-
     :param b: Brightness from 0.0 to 1.0 (default 1.0)
     """
     global _brightness
+
+    
     if new_brightness > 1 or new_brightness < 0:
         raise ValueError('Brightness level must be between 0 and 1')
     _brightness = new_brightness
@@ -292,19 +371,21 @@ def brightness(new_brightness):
 
 def get_brightness():
     """Get the display brightness value
-
     Returns a float between 0.0 and 1.0
     """
     global _brightness
+
+    
     return _brightness
 
 
 def rotation(new_rotation=0):
     """Set the display rotation
-
     :param r: Specify the rotation in degrees: 0, 90, 180 or 270
     """
     global _rotation
+
+    
     if new_rotation in [0, 90, 180, 270]:
         _rotation = new_rotation
         return True
@@ -313,80 +394,84 @@ def rotation(new_rotation=0):
 
 
 def flip_h():
+    """Flips the grid horizontally"""
+
     _flip("h")
 
 
 def flip_v():
+    """Flips the grid vertically"""
+
     _flip("v")
 
 
 def get_shape():
     """Returns the shape (width, height) of the display"""
-    global _w
-    global _h
+
     return (_w, _h)
 
 
 def get_pixel(x, y):
     """Get the RGB value of a single pixel
-
     :param x: Horizontal position from 0 to 7
     :param y: Veritcal position from 0 to 7"""
+
     global _pixel_map
+
+    
     return _pixel_map[x][y]
 
 
 def set_pixel(x, y, r, g, b):
     """Set a single pixel to RGB colour
-
     :param x: Horizontal position from 0 to 7
     :param y: Veritcal position from 0 to 7
     :param r: Amount of red from 0 to 255
     :param g: Amount of green from 0 to 255
-    :param b: Amount of blue from 0 to 255
-    """
+    :param b: Amount of blue from 0 to 255"""
+
     global _pixel_map
-    r, g, b = _adjust_r_g_b_for_brightness_correction(r, g, b)
-    _pixel_map[x][y] = [r, g, b]
+
+    new_r, new_g, new_b = _adjust_r_g_b_for_brightness_correction(r, g, b)
+    _pixel_map[x][y] = [new_r, new_g, new_b]
 
 
 def set_all(r, g, b):
     """Set all pixels to a specific colour"""
+
     global _pixel_map
-    global _w
-    global _h
-    _pixel_map = []
 
+    
     for x in range(_w):
-        row = []
         for y in range(_h):
-            r, g, b = _adjust_r_g_b_for_brightness_correction(r, g, b)
-
-            arr = [r, g, b]
-            row.append(arr)
-
-        _pixel_map.append(row)
+            new_r, new_g, new_b = _adjust_r_g_b_for_brightness_correction(r, g, b)
+            _pixel_map[x][y][0] = new_r
+            _pixel_map[x][y][1] = new_g
+            _pixel_map[x][y][2] = new_b
 
 
 def show():
     """Update pi-topPULSE with the contents of the display buffer"""
+
     global _pixel_map
     global _rotation
+    global _show_enabled
 
+    
     wait_counter = 0
 
-    attempt_to_show_early = !show_enabled
+    attempt_to_show_early = not _show_enabled
     if attempt_to_show_early:
         print("Can't update pi-topPULSE LEDs more than 50/s. Waiting...")
 
-    while !show_enabled:
+    while not _show_enabled:
         if wait_counter >= 50:
             # Timer hasn't reset for some reason - force override
             _enable_show_state()
             break
         else:
             time.sleep(0.001)
-            wait_counter++
+            wait_counter = wait_counter + 1
 
     if attempt_to_show_early:
         print("pi-topPULSE LEDs re-enabled.")
@@ -398,6 +483,7 @@ def show():
 
     _initialise()
 
+    _debug_print("LED data:")
     # For each col
     for x in range(_w):
         # Write col to LED matrix
@@ -406,7 +492,7 @@ def show():
         # Get col's frame buffer, iterating over each pixel
         for y in range(_h + 1):
             if y == _h:
-                # Ambient lighting
+                # Ambient lighting bytes
                 byte0, byte1 = _rgb_to_bytes_to_send(avg_rgb)
             else:
                 byte0, byte1 = _rgb_to_bytes_to_send(rotated_pixel_map[x][y])
@@ -421,57 +507,200 @@ def show():
             arr = bytearray(pixel_map_buffer)
         _write(arr)
 
-    # Prevent another write if it's too fast
-    _disable_show_state()
+        # Prevent another write if it's too fast
+        _disable_show_state()
 
 
 def clear():
     """Clear the buffer"""
-    _pixel_map = _empty_map
+
+    global _pixel_map
+    
+    _pixel_map = deepcopy(_empty_map)
 
 
 def off():
     """Clear the buffer and immediately update pi-topPULSE
-
     Turns off all pixels."""
+    
     clear()
     show()
 
+def run_tests():
+    """Runs a series of tests to check the LED board is working as expected."""
+
+    off()
+    time.sleep(0.5)
+
+    #------------------------------
+    # Pixels
+    #------------------------------
+    
+    counter = 0
+
+    for r in range(4):
+        rotation(90 * r)
+        for x in range(_w):
+            for y in range(_h):
+                rad = math.radians((counter / (4 * _w * _h)) * 360)
+
+                r = int((math.sin(rad) * 127) + 127)
+                g = int((math.cos(rad) * 127) + 127)
+                b = 255 - int((math.sin(rad) * 127) + 127)
+
+                set_pixel(x, y, r, g, b)
+                show()
+                time.sleep(0.05)
+                counter = counter + 1
+        off()
+
+    time.sleep(0.5)
+
+    #------------------------------
+    # Rows and rotation
+    #------------------------------
+
+    for r in range(4):
+        rotation(90 * r)
+        for c in range(3):
+            for x in range(_w):
+                for y in range(_h):
+                    set_pixel(x, y, 255 if c == 0 else 0, 255 if c == 1 else 0, 255 if c == 2 else 0)
+
+                show()
+                time.sleep(0.05)
+
+    off()
+    time.sleep(0.5)
+
+    #------------------------------
+    # Brightness
+    #------------------------------
+
+    for b in range(100):
+        brightness(float(b) / 100)
+        set_all(255, 255, 255)
+        show()
+        time.sleep(0.01)
+    
+    for b in range(100):
+        brightness(1 - (float(b) / 100))
+        set_all(255, 255, 255)
+        show()
+        time.sleep(0.01)
+
+    off()
+
+    brightness(1.0)
+
+    time.sleep(0.5)
+
+    #------------------------------
+    # Flipping
+    #------------------------------
+
+    for x in range(int(_w / 2)):
+        for y in range(int(_h / 2)):
+            set_pixel(x, y, 255, 255, 255)
+
+    set_pixel(int(_w / 4), int(_h / 4), 0, 255, 0)
+
+    show()
+    time.sleep(0.5)        
+
+    for f in range(4):
+        for x in range(2):
+            if x == 0:
+                flip_h()
+            else:
+                flip_v()
+            show()
+            time.sleep(0.5)
+
+    off()
+    time.sleep(0.5)
+
+    #------------------------------
+    # Conway - auto refresh 
+    #------------------------------
+
+    start(0.2)
+
+    life_map = [[0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0],
+                [1, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0]]
+
+    for r in range(40):
+        temp_map = deepcopy(life_map)
+        for x in range(_w):
+            for y in range(_h):
+
+                current_cell = temp_map[x][y]
+                neighbours = 0
+                neighbours = neighbours + temp_map[(x - 1) % _w][(y - 1) % _h]
+                neighbours = neighbours + temp_map[(x - 1) % _w][(y - 0) % _h]
+                neighbours = neighbours + temp_map[(x - 1) % _w][(y + 1) % _h]
+                neighbours = neighbours + temp_map[(x - 0) % _w][(y - 1) % _h]
+                neighbours = neighbours + temp_map[(x - 0) % _w][(y + 1) % _h]
+                neighbours = neighbours + temp_map[(x + 1) % _w][(y - 1) % _h]
+                neighbours = neighbours + temp_map[(x + 1) % _w][(y - 0) % _h]
+                neighbours = neighbours + temp_map[(x + 1) % _w][(y + 1) % _h]
+
+                if current_cell == 1 and (neighbours < 2 or neighbours > 3):
+                    life_map[x][y] = 0
+
+                if (current_cell == 0 and neighbours == 3):
+                    life_map[x][y] = 1
+
+        for x in range(_w):
+            for y in range(_h):
+                if (life_map[x][y] == 1):
+                    set_pixel(x, y, 255, 255, 0)
+                else:
+                    set_pixel(x, y, 0, 128, 0)
+
+        time.sleep(0.2)
+
+    stop()
+    off()
+
 
 def start(new_update_rate=0.1):
+    """Starts a timer to automatically refresh the LEDs"""
+
     global _update_rate
     global _running
-    global _auto_t
-    if new_update_rate < (1/_max_freq):
-        _update_rate = 1/_max_freq
+    global _auto_refresh_timer
+
+    if new_update_rate < (1 / _max_freq):
+        _update_rate = (1 / _max_freq)
     else:
         _update_rate = new_update_rate
 
     _running = True
-    _auto_t.start()
+    _auto_refresh_timer.start()
 
 
 def stop():
+    """Stops the timer that automatically refreshes the LEDs"""
+
     global _running
-    global _auto_t
+    global _auto_refresh_timer
+    
     _running = False
-    _auto_t.cancel()
-
-
-def signal_handler(signal, frame):
-    print("\nQuitting...")
-    stop()
-    off()
-    sys.exit(0)
+    _auto_refresh_timer.cancel()
 
 
 ##################
 # INITIALISATION #
 ##################
-signal = signal.signal(signal.SIGINT, signal_handler)
 
-_auto_t = Timer(_update_rate, _show_automatically)
-
+_signal = signal.signal(signal.SIGINT, _signal_handler)
+_auto_refresh_timer = Timer(_update_rate, _timer_method)
 _temp_disable_t = Timer(_max_freq, _enable_show_state)
 
 clear()
