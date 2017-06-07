@@ -24,7 +24,7 @@ import serial
 import time
 import struct
 import sys
-import configuration
+import ptpulse.configuration
 from tempfile import mkstemp
 from threading import Thread
 
