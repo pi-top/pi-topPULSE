@@ -3,15 +3,23 @@
 import smbus
 import sys
 import time
-import math
+from math import pow
 from numpy import uint8
 
 _i2c_bus = smbus.SMBus(1)
 _device_addr = 0x24
+_debug = False
 
 #######################
 # INTERNAL OPERATIONS #
 #######################
+
+def _debug_print(message):
+    """INTERNAL. Print messages if debug mode enabled."""
+
+    if _debug == True:
+        print(message)  
+
 
 def _get_bit_string(value):
     """INTERNAL. Get string representation of an int in binary"""
@@ -26,26 +34,26 @@ def _update_device_state_bit(bit, value):
     # Index:   3210
 
     if bit not in [0,1,2,3]:
-        print("Not a valid state bit")
+        print("Error: Not a valid state bit")
         return False
 
     try:
         current_state = _read_device_state()
-        print("Current device state: " + _get_bit_string(current_state))
+        _debug_print("Current device state: " + _get_bit_string(current_state))
 
     except:
-        print("There was a problem getting the current device state")
+        print("Error: There was a problem getting the current device state")
         return False
 
     # Get the bit mask for the new state
-    new_state = uint8(math.pow(2, bit))
+    new_state = uint8(pow(2, bit))
 
     if value == 0:
         new_state = ~new_state
 
     # Check if there is anything to do
     if (value == 1 and (new_state & current_state) != 0) or (value == 0 and (~new_state & ~current_state) != 0):
-        print("Mode already set, nothing to send")
+        print("Warning: Mode already set, nothing to send")
         return True
 
     if value == 0:
@@ -66,7 +74,7 @@ def _verify_device_state(expected_state):
         return True
 
     else:
-        print("Device write verification failed. Expected: " + _get_bit_string(expected_state) + " Received: " + _get_bit_string(current_state))
+        print("Error: Device write verification failed. Expected: " + _get_bit_string(expected_state) + " Received: " + _get_bit_string(current_state))
         return False
 
 
@@ -76,13 +84,20 @@ def _write_device_state(state):
     try:
         state_to_send = 0x0F & state
 
-        print("Writing new state:    " + _get_bit_string(state_to_send))
+        _debug_print("Writing new state:    " + _get_bit_string(state_to_send))
         _i2c_bus.write_byte_data(_device_addr, 0, state_to_send)
 
-        return _verify_device_state(state_to_send)
+        result = _verify_device_state(state_to_send)
+
+        if result == True:
+            _debug_print("OK")
+        else:
+            print("Error: New state could not be verified")
+
+        return result
 
     except:
-        print("There was a problem writing to device")
+        print("Error: There was a problem writing to the device")
         return False
 
 
@@ -94,7 +109,7 @@ def _read_device_state():
         return uint8(current_state)
 
     except:
-        print("There was a problem reading from the device")
+        print("Error: There was a problem reading from the device")
         # Best to re-raise as we can't recover from this
         raise
 

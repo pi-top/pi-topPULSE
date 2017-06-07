@@ -24,6 +24,7 @@ import serial
 import time
 import struct
 import sys
+import configuration
 from tempfile import mkstemp
 from threading import Thread
 
@@ -259,6 +260,19 @@ def save(file_path, overwrite=False):
 			print("No recorded audio data found")
 	else:
 		print("Microphone is still recording!")
+
+
+def set_sample_rate_to_16khz():
+	"""Set the appropriate I2C bits to enable 16,000Hz recording on the microphone"""
+
+	configuration.set_microphone_sample_rate_to_16khz()
+
+
+def set_sample_rate_to_22khz():
+	"""Set the appropriate I2C bits to enable 22,050Hz recording on the microphone"""
+
+	configuration.set_microphone_sample_rate_to_22khz()
+
 
 #######################
 # INITIALISATION 	  #

@@ -5,49 +5,50 @@ from ptpulse import microphone
 from ptpulse import configuration
 import time
 
-# print ("configuration.reset_device_state(True)")
-# configuration.reset_device_state(True)
-# print ("")
+print ("Enabling device...")
+configuration.reset_device_state(True)
+print ("")
 
-# print ("configuration.enable_speaker(False)")
-# configuration.enable_speaker(False)
-# print ("")
+time.sleep(1)
 
-# print ("configuration.enable_speaker(True)")
-# configuration.enable_speaker(True)
-# print ("")
+print ("Setting sample rate to 16KHz...")
+configuration.set_microphone_sample_rate_to_16khz()
 
-# print ("configuration.enable_eeprom(True)")
-# configuration.enable_eeprom(True)
-# print ("")
+time.sleep(1)
 
-# print ("configuration.enable_eeprom(False)")
-# configuration.enable_eeprom(False)
-# print ("")
+ledmatrix.set_all(255, 0, 0)
+ledmatrix.show()
 
-# print ("configuration.enable_microphone(False)")
-# configuration.enable_microphone(False)
-# print ("")
+print ("Recording audio for 5s...")
+microphone.record()
+time.sleep(5)
+microphone.stop()
+microphone.save("/tmp/test16.wav", True)
+print ("Saved to /tmp/test16.wav")
+print ("")
 
-# print ("configuration.enable_microphone(True)")
-# configuration.enable_microphone(True)
-# print ("")
+ledmatrix.off()
+time.sleep(2)
 
-# print ("configuration.set_microphone_sample_rate_to_16khz()")
-# configuration.set_microphone_sample_rate_to_16khz()
-# print ("")
+print ("Setting sample rate to 22KHz...")
+configuration.set_microphone_sample_rate_to_22khz()
 
-# print ("configuration.set_microphone_sample_rate_to_22khz()")
-# configuration.set_microphone_sample_rate_to_22khz()
-# print ("")
+time.sleep(1)
 
-# print("configuration.reset_device_state(False)")
-# configuration.reset_device_state(False)
-# print ("")
+ledmatrix.set_all(255, 0, 0)
+ledmatrix.show()
 
-# ledmatrix.run_tests()
+print ("Recording audio for 5s...")
+microphone.record()
+time.sleep(5)
+microphone.stop()
+microphone.save("/tmp/test22.wav", True)
+print ("Saved to /tmp/test22.wav")
+print ("")
 
-# microphone.record()
-# time.sleep(3)
-# microphone.stop()
-# microphone.save("/tmp/test.wav", True)
+ledmatrix.off()
+
+print("Disabling device...")
+configuration.reset_device_state(False)
+print ("")
+
