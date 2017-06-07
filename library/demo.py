@@ -1,13 +1,12 @@
 # demo.py
 
-import ptpulse
+from ptpulse import ledmatrix
+from ptpulse import microphone
 import time
 
-led_matrix = ptpulse.ledmatrix
-led_matrix.run_tests()
+#ledmatrix.run_tests()
 
-mic = ptpulse.microphone
-mic.record()
-time.sleep(10)
-mic.stop()
-mic.save("/tmp/test.wav", True)
+microphone.record()
+time.sleep(5)
+microphone.stop()
+microphone.save("/tmp/test.wav", True)

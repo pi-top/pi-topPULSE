@@ -338,9 +338,6 @@ def brightness(new_brightness):
 
 def get_brightness():
     """Get the display brightness value. Returns a float between 0.0 and 1.0."""
-
-    global _brightness
-
     
     return _brightness
 
