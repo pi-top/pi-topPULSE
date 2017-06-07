@@ -19,6 +19,7 @@
 
 import signal
 import os
+import binascii
 import serial
 import time
 import struct
@@ -77,8 +78,11 @@ def _from_hex(value):
 def space_separated_little_endian_hex(integer_value):
 	"""INTERNAL. Get an integer in format for WAV file header."""
 
-	temp = struct.pack('<i', integer_value).encode('hex')
-	return ' '.join([temp[i:i+2] for i in range(0, len(temp), 2)])
+	hex_string = struct.pack('<i', integer_value)
+	temp = binascii.hexlify(hex_string).decode()
+	result = ' '.join([temp[i:i+2] for i in range(0, len(temp), 2)])
+
+	return result
 
 
 def _init_header_information():
@@ -120,8 +124,10 @@ def _update_header_in_file(file, position, value):
 	"""INTERNAL. Update the WAV header	"""
 
 	hex_value = space_separated_little_endian_hex(value)
+	data = binascii.unhexlify(''.join(hex_value.split()))
+	
 	file.seek(position)
-	file.write(bytearray.fromhex(hex_value))
+	file.write(data)
 
 
 def _finalise_wav_file(file_path):
@@ -133,7 +139,7 @@ def _finalise_wav_file(file_path):
 		print("Error: No data was recorded!")
 		os.remove(file_path)
 	else:
-		with open(file_path, 'rw+') as file:
+		with open(file_path, 'rb+') as file:
 
 			_debug_print("Updating header information...")
 
