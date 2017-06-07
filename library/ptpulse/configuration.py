@@ -6,7 +6,7 @@ import time
 from math import pow
 from numpy import uint8
 
-_i2c_bus = smbus.SMBus(1)
+_bus_id = 1
 _device_addr = 0x24
 _debug = False
 
@@ -82,10 +82,13 @@ def _write_device_state(state):
     """INTERNAL. Send the state bits across the I2C bus"""
 
     try:
+        _debug_print("Connecting to bus...")
+        i2c_bus = smbus.SMBus(_bus_id)
+
         state_to_send = 0x0F & state
 
         _debug_print("Writing new state:    " + _get_bit_string(state_to_send))
-        _i2c_bus.write_byte_data(_device_addr, 0, state_to_send)
+        i2c_bus.write_byte_data(_device_addr, 0, state_to_send)
 
         result = _verify_device_state(state_to_send)
 
@@ -105,7 +108,11 @@ def _read_device_state():
     """INTERNAL. Read from the I2C bus to get the current state of the pulse. Caller should handle exceptions"""
     
     try:
-        current_state = _i2c_bus.read_byte(_device_addr) & 0x0F
+        _debug_print("Connecting to bus...")
+        i2c_bus = smbus.SMBus(_bus_id)
+
+        current_state = i2c_bus.read_byte(_device_addr) & 0x0F
+
         return uint8(current_state)
 
     except:
