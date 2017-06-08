@@ -1,114 +1,81 @@
-# http://soundfile.sapp.org/doc/WaveFormat/
+# microphone.py (pi-topPULSE) 
+# Copyright (C) 2017  CEED ltd.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+#
 
-# https://pypi.python.org/pypi/nnresample/0.1
-
-# https://miguelmota.com/blog/alexa-voice-service-with-curl/
-# https://miguelmota.com/blog/alexa-voice-service-authentication/
-
-# https://developer.amazon.com/public/solutions/alexa/alexa-voice-service/rest/speechrecognizer-requests
-
-#############################
-# Define functionality here #
-#############################
-debug = True
-capture_sample_rate    = 20050
-capture_bit_rate       = 8
-audio_dir              = 'audio'
-audio_filename         = 'output.wav'
-output_audio_filename  = 'alexa.mpg'
-temp_audio_filename    = audio_filename + '.tmp'
-baud_rate              = 250000
-metadata_filename      = "metadata.json"
-response_filename      = "response.txt"
-
-
-print("Importing modules...")
-import codecs
-import json
-import math
-import requests
 import signal
-
-if not debug:
-    import serial
-
-import struct
-import subprocess
-import sys
-import termios
-import time
-import tty
 import os
-import select
-# from nnresample import resample
+import binascii
+import serial
+import time
+import struct
+import sys
+import ptpulse.configuration as configuration
+from tempfile import mkstemp
+from threading import Thread
 
-# Local
-DIR = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(DIR + "/env")
-import auth
-import common
-print("Done...")
+_debug = False
+_bitrate = 8
+_continue_writing = False
+_recording_thread = False
+_thread_running = False
+_exiting = False
+_temp_file_path = ""
 
+#######################
+# INTERNAL OPERATIONS #
+#######################
 
-####################
-# HELPER FUNCTIONS #
-####################
-def signal_handler(signal, frame):
-    print("\nQuitting...")
-    stop()
-    off()
-    sys.exit(0)
-signal = signal.signal(signal.SIGINT, signal_handler)
+def _debug_print(message):
+	"""INTERNAL. Print messages if debug mode enabled."""
 
-
-def setup_term(fd, when=termios.TCSAFLUSH):
-    mode = termios.tcgetattr(fd)
-    mode[tty.LFLAG] = mode[tty.LFLAG] & ~(termios.ECHO | termios.ICANON)
-    termios.tcsetattr(fd, when, mode)
-
-
-def get_ch(timeout=0.001):
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        setup_term(fd)
-        try:
-            rw, wl, xl = select.select([fd], [], [], timeout)
-        except select.error:
-            return
-        if rw:
-            return sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+	if _debug == True:
+		print(message)	
 
 
-def update_state_from_keypress():
-    global save_to_file
+def _signal_handler(signal, frame):
+	"""INTERNAL. Handles signals from the OS."""
 
-    char = get_ch()
-    if char != None:
-        print("User pressed: " + char)
+	global _exiting
 
-    if char == '1':
-        save_to_file = True
-    elif char == '0':
-        save_to_file = False
-    elif char == 'q':
-        sys.exit()
+	if _exiting == False:
+		_exiting = True
 
-    return save_to_file
+		if _thread_running == True:
+			stop()
+	
+	print("\nQuitting...")
+	sys.exit(0)
+	
 
+def _get_size(filename):
+	"""INTERNAL. Gets the size of a file."""
 
-def get_size(filename):
-    st = os.stat(filename)
-    return st.st_size
-
-
-def hex_to_bytes(value):
-    return bytearray.fromhex(value)
+	file_stats = os.stat(filename)
+	return file_stats.st_size
 
 
-def spaced_l_endian_hex(int_val, byte_len=None):
+def _from_hex(value):
+	"""INTERNAL. Gets a bytearray from hex data."""
+
+	return bytearray.fromhex(value)
+
+
+def _spaced_l_endian_hex(int_val, byte_len=None):
     min_byte_len = int(math.ceil(float(int_val.bit_length()) / 8.0))
 
     if byte_len < min_byte_len:
@@ -131,7 +98,6 @@ def spaced_l_endian_hex(int_val, byte_len=None):
 
     temp = codecs.getencoder('hex')(struct.pack(pack_type, int_val))[0].decode("utf-8")
     return ' '.join([temp[i:i+2] for i in range(0, len(temp), 2)])
-    
 
 
 def init_header_information():
@@ -140,376 +106,202 @@ def init_header_information():
     fmt  = "66 6d 74 20"
     DATA = "64 61 74 61"
 
-    header =  hex_to_bytes(RIFF)                                                # ChunkID
-    header += hex_to_bytes(spaced_l_endian_hex(int_val = 0, byte_len = 4))      # ChunkSize - 4 bytes (to be changed depending on length of data...)
-    header += hex_to_bytes(WAVE)                                                # Format
-    header += hex_to_bytes(fmt)                                                 # Subchunk1ID
-    header += hex_to_bytes(spaced_l_endian_hex(int_val = 16, byte_len = 4))     # Subchunk1Size (PCM = 16)
-    header += hex_to_bytes(spaced_l_endian_hex(int_val = 1, byte_len = 2))      # AudioFormat   (PCM = 1)
-    header += hex_to_bytes(spaced_l_endian_hex(int_val = 1, byte_len = 2))      # NumChannels
-    header += hex_to_bytes(spaced_l_endian_hex(int_val = capture_sample_rate))  # SampleRate
-    header += hex_to_bytes(spaced_l_endian_hex(int_val = capture_sample_rate))  # ByteRate (Same as SampleRate due to 1 channel, 1 byte per sample)
-    header += hex_to_bytes(spaced_l_endian_hex(int_val = 1, byte_len = 2))      # BlockAlign - (no. of bytes per sample)
-    header += hex_to_bytes(spaced_l_endian_hex(int_val = 8, byte_len = 2))      # BitsPerSample
-    header += hex_to_bytes(DATA)                                                # Subchunk2ID
-    header += hex_to_bytes(spaced_l_endian_hex(int_val = 0, byte_len = 4))      # Subchunk2Size - 4 bytes (to be changed depending on length of data...)
+    header =  _from_hex(RIFF)                                                   # ChunkID
+    header += _from_hex(spaced_l_endian_hex(int_val = 0, byte_len = 4))         # ChunkSize - 4 bytes (to be changed depending on length of data...)
+    header += _from_hex(WAVE)                                                   # Format
+    header += _from_hex(fmt)                                                    # Subchunk1ID
+    header += _from_hex(spaced_l_endian_hex(int_val = 16, byte_len = 4))        # Subchunk1Size (PCM = 16)
+    header += _from_hex(spaced_l_endian_hex(int_val = 1, byte_len = 2))         # AudioFormat   (PCM = 1)
+    header += _from_hex(spaced_l_endian_hex(int_val = 1, byte_len = 2))         # NumChannels
+    header += _from_hex(spaced_l_endian_hex(int_val = capture_sample_rate))     # SampleRate
+    header += _from_hex(spaced_l_endian_hex(int_val = capture_sample_rate))     # ByteRate (Same as SampleRate due to 1 channel, 1 byte per sample)
+    header += _from_hex(spaced_l_endian_hex(int_val = 1, byte_len = 2))         # BlockAlign - (no. of bytes per sample)
+    header += _from_hex(spaced_l_endian_hex(int_val = _bitrate, byte_len = 2))  # BitsPerSample
+    header += _from_hex(DATA)                                                   # Subchunk2ID
+    header += _from_hex(spaced_l_endian_hex(int_val = 0, byte_len = 4))         # Subchunk2Size - 4 bytes (to be changed depending on length of data...)
 
     return header
 
 
-def update_header(file_contents, pos, int_val, byte_len):
-    hex_value = spaced_l_endian_hex(int_val, byte_len)
-    byte_arr = hex_to_bytes(hex_value)
-    file_contents = file_contents[:pos] + byte_arr + file_contents[(pos + len(byte_arr)):]
-    return file_contents
-
-
-def update_header_information_after_recording():
-    # Update zero'd ChunkSize and Subchunk2Size
-    with open(audio_filepath, 'rb') as file:
-        new_file_contents = file.read()
-        
-        # Calculate DATA
-        size_of_data = get_size(audio_filepath) - header_length
-        print("Length of DATA: " + str(size_of_data))
-
-        if size_of_data <= 0:
-            print("No DATA - removing output file!")
-            os.remove(audio_filepath)
-            success = False
-        else:
-            Subchunk2Size = size_of_data
-            ChunkSize = 36 + Subchunk2Size
-
-            new_file_contents = update_header(new_file_contents, pos = 4, int_val = ChunkSize, byte_len = 4)
-            new_file_contents = update_header(new_file_contents, pos = 40, int_val = Subchunk2Size, byte_len = 4)
-
-            with open(temp_audio_filepath, 'wb') as tmp_file:
-                tmp_file.write(new_file_contents)
-
-            success = True
-
-    if success:
-        os.rename(temp_audio_filepath, audio_filepath)
-
-    return success
-
-####################
-# SERIAL FUNCTIONS #
-####################
-def init_serial():
-    ser = serial.Serial(
-        port = '/dev/serial0',
-        timeout = 1,
-        baudrate = baud_rate,
-        parity = serial.PARITY_NONE,
-        stopbits = serial.STOPBITS_ONE,
-        bytesize = serial.EIGHTBITS
-    )
-
-    print("Serial is open? " + str(ser.isOpen()))
-    print("Waiting for user to start recording...")
-
-def save_wav_from_serial():
-    with open(audio_filepath, 'wb') as file:
-        print("WRITING: initial header information")
-        file.write(init_header_information())
-        print("WRITING: wave data")
-
-        counter = 0
-        while save_to_file:
-            update_state_from_keypress()
-
-            if not ser.inWaiting():
-                print("Waiting for serial receive")
-
-            while not ser.inWaiting():
-                time.sleep(0.001)
-
-            print("Ready to read - reading...")
-            audio_output = ser.read(ser.inWaiting())
-            file.write(audio_output)
-            counter += len(audio_output)
-            print("WAVE DATA: Byte count - " + str(counter))
-
-    print("Finished writing raw WAV data to file")
-
-###################
-# ALEXA FUNCTIONS #
-###################
-def fix_file_for_alexa():
-    print("Done creating WAV file")
-    # ONLY RUN IF SAMPLE RATE IS NOT EQUAL TO alexa_reqd_sample_rate
-    sample_rate = get_sample_rate_wav_file()
-    bits_per_sample = get_bits_per_sample_wav_file()
-
-    correct_sample_rate = (sample_rate == alexa_reqd_sample_rate)
-    correct_bits_per_sample = (bits_per_sample == alexa_reqd_bits_per_sample)
-    
-
-    if correct_sample_rate == False:
-        print("File sample rate: " + str(sample_rate))
-        print("Required sample rate: " + str(alexa_reqd_sample_rate))
-        print("Resampling...")
-        # resample_wav_file()
-        print("Done resampling - adjusting bit rate")
-        # adjust_wav_file_bit_rate()
-    
-    update_header_information_for_alexa(update_sample_rate = (correct_sample_rate == False), update_bits_per_sample = (correct_bits_per_sample == False))
-
-
-def get_bits_per_sample_wav_file():
-    resp = subprocess.check_output(['sox', '--info', audio_filepath], universal_newlines = True)
-    lines = resp.split("\n")
-
-    bit_rate = None
-    for line in lines:
-        fields = line.split(":")
-        if len(fields) >= 2 and 'Precision' in fields[0]:
-            bit_rate_field = fields[1]
-            bit_rate = bit_rate_field.replace("-bit", "").strip()
-            break
-
-    return bit_rate
-
-
-def get_sample_rate_wav_file():
-    resp = subprocess.check_output(['sox', '--info', audio_filepath], universal_newlines = True)
-    lines = resp.split("\n")
-
-    sample_rate = None
-    for line in lines:
-        fields = line.split(":")
-        if len(fields) >= 2 and 'Sample Rate' in fields[0]:
-            sample_rate_field = fields[1]
-            sample_rate_str = sample_rate_field.strip()
-            break
-
-    try:
-        sample_rate = int(sample_rate_str)
-    except ValueError as verr:
-        # not convertible to int
-        print(verr)
-        sys.exit()
-    except Exception as ex:
-        # exception occurred during conversion
-        print(ex)
-        sys.exit()
-        pass
-
-    return sample_rate
-
-
-# def resample_wav_file():
-#     with open(audio_filepath, 'rb') as file:
-#         file_contents = file.read()
-#         file_contents_header_str = file_contents[:header_length]  # Header
-#         stripped_file_contents_str = file_contents[header_length:]  # After Header
-#         wav_float_arr = []
-#         for ch in stripped_file_contents_str:
-#             hex_item = format(ord(ch), 'x')
-#             float_item = float(float(int(hex_item, 16)) / 127.5) - 1.0
-#             # print(str(hex_item).zfill(2) + " : " + str(float_item))
-#             wav_float_arr.append(float_item)
-
-#     # print(wav_float_arr)
-
-#     # beta : float
-#     #     Beta factor for Kaiser window.  Determines tradeoff between
-#     #     stopband attenuation and transition band width
-#     # L : int
-#     #     FIR filter order.  Determines stopband attenuation.  The higher
-#     #     the better, at the cost of complexity.
-#     # axis : int
-#     #     The axis of `x` that is resampled.
-#     resampled_wav_float_arr = resample(wav_float_arr, alexa_reqd_sample_rate, get_sample_rate_wav_file(), beta = 5.0, L = 16001, axis = 0)
-
-#     # resampled_stripped_file_contents = sig.resample(wav_float_arr, alexa_reqd_sample_rate)
-
-#     resampled_stripped_file_contents = "";
-#     for float_item in resampled_wav_float_arr:
-#         # Convert back to int
-#         # -1 to +1 -> 0 to 255
-#         int_item = int(round((float_item + 1) * 127.5))
-        
-#         # Catch value overflow from resampling
-#         if int_item < 0:
-#             int_item = 0
-#         elif int_item > 255:
-#             int_item = 255
-        
-#         # int to byte
-#         resampled_stripped_file_contents += hex_to_bytes(spaced_l_endian_hex(int_val = int_item, byte_len = 1))
-
-#     print("Writing to " + temp_audio_filepath)
-#     with open(temp_audio_filepath, 'wb') as file:
-#         file.write(file_contents_header_str)
-#         file.write(resampled_stripped_file_contents)
-
-#     print("Moving " + temp_audio_filepath + " to " + audio_filepath)
-#     os.rename(temp_audio_filepath, audio_filepath)
-
-
-
-def update_header(file_contents, pos, int_val, byte_len):
-    hex_value = spaced_l_endian_hex(int_val, byte_len)
-    byte_arr = hex_to_bytes(hex_value)
-    file_contents = file_contents[:pos] + byte_arr + file_contents[(pos + len(byte_arr)):]
-    return file_contents
-
-
-
-def adjust_wav_file_bit_rate():
-    # PAD WAV CONTENT
-    with open(audio_filepath, 'rb') as file:
-        with open(temp_audio_filepath, 'wb') as tmp_file:
-            reading = True
-            header_info = file.read(header_length)
-            tmp_file.write(header_info)
-            
-            while reading:
-                wav_byte_s = file.read(1)
-                if not wav_byte_s:
-                    reading = False
-                else:
-                    wav_byte = wav_byte_s[0]
-                    
-                    # wav_val = int(wav_byte.encode('hex'), 16)
-                    # scaled_wav_val = wav_val * 65535 / 255
-                    # wav_bytes_to_write = hex_to_bytes(spaced_l_endian_hex(scaled_wav_val, byte_len = 2))
-                    # tmp_file.write(wav_bytes_to_write)
-
-                    wav_bytes_to_write = hex_to_bytes(spaced_l_endian_hex(0, byte_len = 1)) + wav_byte
-                    tmp_file.write(wav_bytes_to_write)
-
-    os.rename(temp_audio_filepath, audio_filepath)
-    return
-
-
-def update_header_information_for_alexa(update_sample_rate = False, update_bits_per_sample = False):
-    if update_sample_rate or update_bits_per_sample:
-        print("Setting 'bits per sample' to 16 and sample rate to 16kHz")
-        with open(audio_filepath, 'rb') as file:
-            new_file_contents = file.read()
-
-            if update_sample_rate:
-                SampleRate = alexa_reqd_sample_rate                                        # SampleRate
-                new_file_contents = update_header(new_file_contents, pos = 24, int_val = SampleRate, byte_len = 4)
-
-            if update_sample_rate or update_bits_per_sample:
-                ByteRate = int(alexa_reqd_sample_rate * (alexa_reqd_bits_per_sample / 8))  # ByteRate         == SampleRate * BitsPerSample/8
-                new_file_contents = update_header(new_file_contents, pos = 28, int_val = ByteRate, byte_len = 4)
-
-            if update_bits_per_sample:
-                BlockAssign = int(alexa_reqd_bits_per_sample / 8)                          # BlockAlign       == BitsPerSample/8
-                new_file_contents = update_header(new_file_contents, pos = 32, int_val = BlockAssign, byte_len = 2)
-
-                BitsPerSample = alexa_reqd_bits_per_sample                                 # BitsPerSample
-                new_file_contents = update_header(new_file_contents, pos = 34, int_val = BitsPerSample, byte_len = 2)
-
-            with open(temp_audio_filepath, 'wb') as tmp_file:
-                tmp_file.write(new_file_contents)
-
-        os.rename(temp_audio_filepath, audio_filepath)
-
-def do_alexa():
-    print("Fixing WAV for Alexa")
-    # fix_file_for_alexa()
-
-    print("Posting to Alexa")
-    get_alexa_auth_token()
-    upload_to_alexa_and_save_response_to_file()
-
-    print("Sent to Alexa - listening to response")
-    listen_to_alexa_response()
-
-    print("Done")
-
-
-def get_alexa_auth_token():
-    global ACCESS_TOKEN
-
-    print("Getting new auth token...")
-
-    data = [
-        ('grant_type', 'refresh_token'),
-        ('refresh_token', auth.REFRESH_TOKEN),
-        ('client_id', common.CLIENT_ID),
-        ('client_secret', common.CLIENT_SECRET),
-        ('redirect_uri', common.REDIRECT_URI)
-    ]
-
-    r = requests.post('https://api.amazon.com/auth/o2/token', data=data)
-
-    resp = r.json()
-    if r.status_code == 200:
-        ACCESS_TOKEN = resp['access_token']
-        print("Done.")
-    else:
-        print("ERROR!")
-        error_obj = resp['error']
-        error_code = error_obj['code']
-        error_msg = error_obj['message']
-        print("\t" + error_code)
-        print("\t" + error_msg)
-        sys.exit()
-
-
-def upload_to_alexa_and_save_response_to_file():
-    print("Uploading audio to Alexa...")
-
-    script_path = os.path.dirname(os.path.realpath(__file__)) + '/scripts/uploadToAlexaAndSaveResponse.sh'
-    resp = subprocess.call([script_path, ACCESS_TOKEN, audio_filepath, metadata_filepath, response_filepath])
-
-def listen_to_alexa_response():
-
-    # Process the response to extract just the audio data
-    start_writing = False
-    audio_file = open(output_audio_filepath, 'w')
-    with open(response_filepath) as input_file:
-        for line in input_file:
-            if start_writing:
-                if line != "" and not line.startswith("--"):
-                    audio_file.write(line)
-            else:
-                if "Content-Type: audio/mpeg" in line:
-                    start_writing = True
-
-    cat = subprocess.Popen(('cat', output_audio_filepath), stdout=subprocess.PIPE)
-    subprocess.call(('mpg123', '-'), stdin=cat.stdout)
-
-    cat.wait()
-
-
-# Internal variables
-output_audio_filepath   = DIR + "/" + audio_dir + "/" + output_audio_filename
-audio_filepath          = DIR + "/" + audio_dir + "/" + audio_filename
-temp_audio_filepath     = DIR + "/" + audio_dir + "/" + temp_audio_filename
-metadata_filepath       = DIR + "/" + metadata_filename
-response_filepath       = DIR + "/" + response_filename
-
-ACCESS_TOKEN = ""
-
-save_to_file = False
-header_length = 44
-alexa_reqd_sample_rate = 16000
-alexa_reqd_bits_per_sample = 16
-
-#####################
-# LOGIC STARTS HERE #
-#####################
-if debug:
-    do_alexa()
-else:
-    init_serial()
-    while True:
-        # save to file if appropriate
-        update_state_from_keypress()
-        if save_to_file:
-            save_wav_from_serial()
-            print("Updating header information")
-            if update_header_information_after_recording():
-                do_alexa()
-            else:
-                print("Error - failed to fix header information")
-            break
+def _update_header_in_file(file, position, value):
+	"""INTERNAL. Update the WAV header	"""
+
+	hex_value = _spaced_l_endian_hex(value)
+	data = binascii.unhexlify(''.join(hex_value.split()))
+	
+	file.seek(position)
+	file.write(data)
+
+
+def _finalise_wav_file(file_path):
+	"""INTERNAL. Update the WAV file header with the size of the data."""
+
+	size_of_data = _get_size(file_path) - 44
+
+	if size_of_data <= 0:
+		print("Error: No data was recorded!")
+		os.remove(file_path)
+	else:
+		with open(file_path, 'rb+') as file:
+
+			_debug_print("Updating header information...")
+
+			_update_header_in_file(file, 4, size_of_data + 36)
+			_update_header_in_file(file, 40, size_of_data)
+
+
+def _thread_method():
+	"""INTERNAL. Thread method."""
+
+	_record_audio()
+
+
+def _record_audio():
+	"""INTERNAL. Open the serial port and capture audio data into a temp file."""
+
+	global _temp_file_path
+
+	temp_file_tuple = mkstemp()
+	os.close(temp_file_tuple[0])
+	_temp_file_path = temp_file_tuple[1]
+
+	if os.path.exists('/dev/serial0'):	  	
+
+		_debug_print("Opening serial device...")
+
+		serial_device = serial.Serial(port = '/dev/serial0', timeout = 1, baudrate = 250000, parity = serial.PARITY_NONE, stopbits = serial.STOPBITS_ONE, bytesize = serial.EIGHTBITS)
+		serial_device_open = serial_device.isOpen()
+
+		if serial_device_open == True:
+			
+			try:
+				_debug_print("Start recording")
+				
+				with open(_temp_file_path, 'wb') as file:
+
+					_debug_print("WRITING: initial header information")
+					file.write(_init_header_information())
+
+					if serial_device.inWaiting():
+						_debug_print("Flushing input and starting from scratch")
+						serial_device.flushInput()
+
+					_debug_print("WRITING: wave data")
+
+					while _continue_writing:
+						while not serial_device.inWaiting():
+							time.sleep(0.01)
+						
+						audio_output = serial_device.read(serial_device.inWaiting())
+
+						wav_bytes_to_write = ""
+						for wav_byte in audio_output:
+
+							# PADDING FOR 16-BIT
+							if _bitrate == 16:
+								wav_bytes_to_write += _from_hex(_spaced_l_endian_hex(0, byte_len = 1))
+
+							wav_bytes_to_write += wav_byte
+
+						file.write(audio_output)
+						time.sleep(0.1)
+
+			finally:
+				serial_device.close()
+
+				_finalise_wav_file(_temp_file_path)
+
+				_debug_print("Finished Recording.")
+
+		else:
+			print("Error: Serial port failed to open")
+
+	else:
+		print("Error: Could not find serial port - are you sure it's enabled?")
+
+
+#######################
+# EXTERNAL OPERATIONS #
+#######################
+
+def record():
+	"""Start recording on the pi-topPULSE microphone."""
+
+	global _thread_running
+	global _continue_writing
+	global _recording_thread
+
+	if _thread_running == False:
+		_thread_running = True
+		_continue_writing = True
+		_recording_thread = Thread(group=None, target=_thread_method)
+		_recording_thread.start()
+	else:
+		print("Microphone is already recording!")
+
+
+def stop():
+	"""Stops recording audio"""
+
+	global _thread_running
+	global _continue_writing
+
+	_continue_writing = False
+	_recording_thread.join()
+	_thread_running = False
+	
+
+def save(file_path, overwrite=False):
+	"""Saves recorded audio to a file."""
+
+	global _temp_file_path
+
+	if _thread_running == False:
+		if _temp_file_path != "":
+			if os.path.exists(file_path) == False or overwrite == True:
+				
+				if os.path.exists(file_path):
+					os.remove(file_path)
+
+				os.rename(_temp_file_path, file_path)
+				_temp_file_path = ""
+
+			else:
+				print("File already exists")
+		else:
+			print("No recorded audio data found")
+	else:
+		print("Microphone is still recording!")
+
+
+def set_sample_rate_to_16khz():
+	"""Set the appropriate I2C bits to enable 16,000Hz recording on the microphone"""
+
+	configuration.set_microphone_sample_rate_to_16khz()
+
+
+def set_sample_rate_to_22khz():
+	"""Set the appropriate I2C bits to enable 22,050Hz recording on the microphone"""
+
+	configuration.set_microphone_sample_rate_to_22khz()
+
+
+def set_bit_rate_to_unsigned_8():
+	"""Set bitrate to device default"""
+
+	global _bitrate
+	_bitrate = 8
+
+
+def set_bit_rate_to_unsigned_16():
+	"""Set bitrate to double that of device default by zero-padding"""
+
+	global _bitrate
+	_bitrate = 16
+
+
+#######################
+# INITIALISATION 	  #
+#######################
+
+_signal = signal.signal(signal.SIGINT, _signal_handler)
