@@ -35,8 +35,6 @@ _thread_running = False
 _exiting = False
 _temp_file_path = ""
 
-_sample_rate = 22050
-
 #######################
 # INTERNAL OPERATIONS #
 #######################
@@ -99,10 +97,15 @@ def _init_header_information():
 	eight_2B_LE = "08 00"
 	sixteen_4B_LE = "10 00 00 00"
 	one_2B_LE = "01 00"
-
 	zero_4B = "00 00 00 00"
-	
-	sample_rate_LE = space_separated_little_endian_hex(_sample_rate)
+
+	sample_rate = 22050
+
+	if configuration.microphone_sample_rate_is_16khz():
+		print("Sample rate is set to 16,000Hz")
+		sample_rate = 16000
+		
+	sample_rate_LE = space_separated_little_endian_hex(sample_rate)
 
 	header =  _from_hex(RIFF)		    # ChunkID
 	header += _from_hex(zero_4B)		# chunk_size - 4 bytes (to be changed depending on length of data...)

@@ -160,3 +160,35 @@ def set_microphone_sample_rate_to_22khz():
     """Set the appropriate I2C bits to enable 22,050Hz recording on the microphone"""
 
     return _update_device_state_bit(3, 0)
+
+
+def speaker_enabled():
+    """Get whether the speaker is enabled"""
+    
+    return (_read_device_state() & 0x01) == 0
+
+
+def eeprom_enabled():
+    """Get whether the eeprom is enabled"""
+
+    return (_read_device_state() & 0x04) != 0
+
+
+def microphone_enabled():
+    """Get whether the microphone is enabled"""
+
+    return (_read_device_state() & 0x02) == 0
+
+
+def microphone_sample_rate_is_16khz():
+    """Get whether the microphone is set to record at a sample rate of 16,000Hz"""
+
+    return (_read_device_state() & 0x08) != 0
+
+
+def microphone_sample_rate_is_22khz():
+    """Get whether the microphone is set to record at a sample rate of 22,050Hz"""
+
+    return (_read_device_state() & 0x08) == 0
+
+
