@@ -29,6 +29,7 @@ from tempfile import mkstemp
 from threading import Thread
 
 _debug = False
+_bitrate = 8
 _continue_writing = False
 _recording_thread = False
 _thread_running = False
@@ -194,6 +195,16 @@ def _record_audio():
 							time.sleep(0.01)
 						
 						audio_output = serial_device.read(serial_device.inWaiting())
+
+						wav_bytes_to_write = ""
+						for wav_byte in audio_output:
+
+							# PADDING FOR 16-BIT
+							if _bitrate == 16:
+								wav_bytes_to_write += hex_to_bytes(spaced_l_endian_hex(0, byte_len = 1))
+
+							wav_bytes_to_write += wav_byte
+
 						file.write(audio_output)
 						time.sleep(0.1)
 
@@ -275,6 +286,20 @@ def set_sample_rate_to_22khz():
 	"""Set the appropriate I2C bits to enable 22,050Hz recording on the microphone"""
 
 	configuration.set_microphone_sample_rate_to_22khz()
+
+
+def set_bit_rate_to_unsigned_8():
+	"""Set bitrate to device default"""
+
+	global _bitrate
+	_bitrate = 8
+
+
+def set_bit_rate_to_unsigned_16():
+	"""Set bitrate to double that of device default by zero-padding"""
+
+	global _bitrate
+	_bitrate = 16
 
 
 #######################
