@@ -1,11 +1,9 @@
-# http://soundfile.sapp.org/doc/WaveFormat/
-
-# https://pypi.python.org/pypi/nnresample/0.1
-
-# https://miguelmota.com/blog/alexa-voice-service-with-curl/
-# https://miguelmota.com/blog/alexa-voice-service-authentication/
-
-# https://developer.amazon.com/public/solutions/alexa/alexa-voice-service/rest/speechrecognizer-requests
+import requests
+import ptpulse.microphone as ptpulsemic
+import serial
+import subprocess
+import sys
+import os
 
 #############################
 # Define functionality here #
@@ -14,29 +12,9 @@ audio_dir              = 'audio'
 audio_filename         = 'output.wav'
 output_audio_filename  = 'alexa.mpg'
 temp_audio_filename    = audio_filename + '.tmp'
-metadata_filename      = "metadata.json"
-response_filename      = "response.txt"
+metadata_filename      = 'metadata.json'
+response_filename      = 'response.txt'
 
-
-print("Importing modules...")
-import codecs
-import json
-import math
-import requests
-import signal
-import ptpulse.microphone as ptpulsemic
-
-if not debug:
-    import serial
-
-import struct
-import subprocess
-import sys
-import termios
-import time
-import tty
-import os
-import select
 
 # Local
 DIR = os.path.dirname(os.path.realpath(__file__))
