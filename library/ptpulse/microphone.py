@@ -240,6 +240,12 @@ def record():
 		print("Microphone is already recording!")
 
 
+def is_recording():
+	"""Returns recording state of the pi-topPULSE microphone."""
+
+	return _thread_running
+
+
 def stop():
 	"""Stops recording audio"""
 
