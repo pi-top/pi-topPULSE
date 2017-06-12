@@ -25,6 +25,8 @@ import time
 import math
 from copy import deepcopy
 from threading import Timer
+# local
+import configuration
 
 _initialised = False
 _debug = False
@@ -123,20 +125,25 @@ def _initialise():
     global _pixel_map
     
     if not _initialised:
-        if not os.path.exists('/dev/serial0'):
-            err_str = "Could not find serial port - are you sure it's enabled?"
-            raise serial.serialutil.SerialException(err_str)
+        if configuration.mcu_enabled():    
+            if not os.path.exists('/dev/serial0'):
+                err_str = "Could not find serial port - are you sure it's enabled?"
+                raise serial.serialutil.SerialException(err_str)
 
-        _debug_print("Opening serial port...")
+            _debug_print("Opening serial port...")
 
-        _serial_device = serial.Serial("/dev/serial0", baudrate = 250000, timeout = 2)
+            _serial_device = serial.Serial("/dev/serial0", baudrate = 250000, timeout = 2)
 
-        if _serial_device.isOpen():
-            _debug_print ("OK.")
+            if _serial_device.isOpen():
+                _debug_print ("OK.")
+            else:
+                print("Error: Failed to open serial port!")
+                sys.exit()
+
+            _initialised = True
         else:
-            print("Error: Failed to open serial port!")
-
-        _initialised = True
+            print("Error: pi-topPULSE is not initialised. Please make sure that you have installed 'pt-peripheral-cfg' package")
+            sys.exit()
 
 
 def _debug_print(message):

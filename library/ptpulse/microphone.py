@@ -24,9 +24,10 @@ import serial
 import time
 import struct
 import sys
-import ptpulse.configuration as configuration
 from tempfile import mkstemp
 from threading import Thread
+# local
+import configuration
 
 _debug = False
 _bitrate = 8
@@ -311,3 +312,7 @@ def set_bit_rate_to_unsigned_16():
 #######################
 
 _signal = signal.signal(signal.SIGINT, _signal_handler)
+
+if not configuration.mcu_enabled():
+	print("Error: pi-topPULSE is not initialised. Please make sure that you have installed 'pt-peripheral-cfg' package")
+	sys.exit()

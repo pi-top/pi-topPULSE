@@ -10,6 +10,11 @@ _bus_id = 1
 _device_addr = 0x24
 _debug = False
 
+_speaker_bit = 0
+_mcu_bit = 1
+_eeprom_bit = 2
+_16khz_bit = 3
+
 #######################
 # INTERNAL OPERATIONS #
 #######################
@@ -19,6 +24,13 @@ def _debug_print(message):
 
     if _debug == True:
         print(message)  
+
+
+def _get_addr_for_bit(bit):
+    if bit in [0,1,2,3]:
+        return uint8(pow(2, bit))
+    else
+        return -1
 
 
 def _get_bit_string(value):
@@ -121,33 +133,27 @@ def _read_device_state():
         raise
 
 
+_clean_enable_state = _get_addr_for_bit(_eeprom_bit)
+_clean_disable_state = _get_addr_for_bit(_speaker_bit) | _get_addr_for_bit(_mcu_bit)
+
+
 #######################
 # EXTERNAL OPERATIONS #
 #######################
 
+# SET STATE
+
+def set_debug_print_state(debug_enable):
+    """Enable/disable debug prints"""
+
+    global _debug
+    _debug = debug_enable
+
 def reset_device_state(enable):
     """Reset the device state bits to the default enabled or disabled state"""
 
-    state_to_send = 0x04 if enable else 0x0B
+    state_to_send = _clean_enable_state if enable else _clean_disable_state
     return _write_device_state(state_to_send)
-
-
-def enable_speaker(enable):
-    """Set the appropriate I2C bits to enable the speaker"""
-    
-    return _update_device_state_bit(0, 0 if enable else 1)
-
-
-def enable_eeprom(enable):
-    """Set the appropriate I2C bits to enable the eeprom"""
-
-    return _update_device_state_bit(2, 1 if enable else 0)
-
-
-def enable_microphone(enable):
-    """Set the appropriate I2C bits to enable the microphone"""
-
-    return _update_device_state_bit(1, 0 if enable else 1)
 
 
 def set_microphone_sample_rate_to_16khz():
@@ -162,33 +168,33 @@ def set_microphone_sample_rate_to_22khz():
     return _update_device_state_bit(3, 0)
 
 
+# GET STATE
+
 def speaker_enabled():
     """Get whether the speaker is enabled"""
     
-    return (_read_device_state() & 0x01) == 0
+    return (_read_device_state() & _get_addr_for_bit(_speaker_bit)) == 0
+
+
+def mcu_enabled():
+    """Get whether the onboard MCU is enabled"""
+
+    return (_read_device_state() & _get_addr_for_bit(_mcu_bit)) == 0
 
 
 def eeprom_enabled():
     """Get whether the eeprom is enabled"""
 
-    return (_read_device_state() & 0x04) != 0
-
-
-def microphone_enabled():
-    """Get whether the microphone is enabled"""
-
-    return (_read_device_state() & 0x02) == 0
+    return (_read_device_state() & _get_addr_for_bit(_eeprom_bit)) != 0
 
 
 def microphone_sample_rate_is_16khz():
     """Get whether the microphone is set to record at a sample rate of 16,000Hz"""
 
-    return (_read_device_state() & 0x08) != 0
+    return (_read_device_state() & _get_addr_for_bit(_16khz_bit)) != 0
 
 
 def microphone_sample_rate_is_22khz():
     """Get whether the microphone is set to record at a sample rate of 22,050Hz"""
 
-    return (_read_device_state() & 0x08) == 0
-
-
+    return (_read_device_state() & _get_addr_for_bit(_16khz_bit)) == 0
