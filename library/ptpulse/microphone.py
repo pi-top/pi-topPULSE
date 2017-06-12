@@ -44,38 +44,38 @@ _temp_file_path = ""
 #######################
 
 def _debug_print(message):
-	"""INTERNAL. Print messages if debug mode enabled."""
+    """INTERNAL. Print messages if debug mode enabled."""
 
-	if _debug == True:
-		print(message)	
+    if _debug == True:
+        print(message)  
 
 
 def _signal_handler(signal, frame):
-	"""INTERNAL. Handles signals from the OS."""
+    """INTERNAL. Handles signals from the OS."""
 
-	global _exiting
+    global _exiting
 
-	if _exiting == False:
-		_exiting = True
+    if _exiting == False:
+        _exiting = True
 
-		if _thread_running == True:
-			stop()
-	
-	print("\nQuitting...")
-	sys.exit(0)
-	
+        if _thread_running == True:
+            stop()
+    
+    print("\nQuitting...")
+    sys.exit(0)
+    
 
 def _get_size(filename):
-	"""INTERNAL. Gets the size of a file."""
+    """INTERNAL. Gets the size of a file."""
 
-	file_stats = os.stat(filename)
-	return file_stats.st_size
+    file_stats = os.stat(filename)
+    return file_stats.st_size
 
 
 def _from_hex(value):
-	"""INTERNAL. Gets a bytearray from hex data."""
+    """INTERNAL. Gets a bytearray from hex data."""
 
-	return bytearray.fromhex(value)
+    return bytearray.fromhex(value)
 
 
 def _spaced_l_endian_hex(int_val, byte_len=None):
@@ -110,9 +110,9 @@ def _init_header_information():
     DATA = "64 61 74 61"
 
     if configuration.microphone_sample_rate_is_22khz():
-	    capture_sample_rate = 22050
-	else:
-	    capture_sample_rate = 16000
+        capture_sample_rate = 22050
+    else:
+        capture_sample_rate = 16000
 
     header =  _from_hex(RIFF)                                                   # ChunkID
     header += _from_hex(_spaced_l_endian_hex(int_val = 0, byte_len = 4))        # ChunkSize - 4 bytes (to be changed depending on length of data...)
@@ -132,100 +132,100 @@ def _init_header_information():
 
 
 def _update_header_in_file(file, position, value):
-	"""INTERNAL. Update the WAV header	"""
+    """INTERNAL. Update the WAV header  """
 
-	hex_value = _spaced_l_endian_hex(value)
-	data = binascii.unhexlify(''.join(hex_value.split()))
-	
-	file.seek(position)
-	file.write(data)
+    hex_value = _spaced_l_endian_hex(value)
+    data = binascii.unhexlify(''.join(hex_value.split()))
+    
+    file.seek(position)
+    file.write(data)
 
 
 def _finalise_wav_file(file_path):
-	"""INTERNAL. Update the WAV file header with the size of the data."""
+    """INTERNAL. Update the WAV file header with the size of the data."""
 
-	size_of_data = _get_size(file_path) - 44
+    size_of_data = _get_size(file_path) - 44
 
-	if size_of_data <= 0:
-		print("Error: No data was recorded!")
-		os.remove(file_path)
-	else:
-		with open(file_path, 'rb+') as file:
+    if size_of_data <= 0:
+        print("Error: No data was recorded!")
+        os.remove(file_path)
+    else:
+        with open(file_path, 'rb+') as file:
 
-			_debug_print("Updating header information...")
+            _debug_print("Updating header information...")
 
-			_update_header_in_file(file, 4, size_of_data + 36)
-			_update_header_in_file(file, 40, size_of_data)
+            _update_header_in_file(file, 4, size_of_data + 36)
+            _update_header_in_file(file, 40, size_of_data)
 
 
 def _thread_method():
-	"""INTERNAL. Thread method."""
+    """INTERNAL. Thread method."""
 
-	_record_audio()
+    _record_audio()
 
 
 def _record_audio():
-	"""INTERNAL. Open the serial port and capture audio data into a temp file."""
+    """INTERNAL. Open the serial port and capture audio data into a temp file."""
 
-	global _temp_file_path
+    global _temp_file_path
 
-	temp_file_tuple = mkstemp()
-	os.close(temp_file_tuple[0])
-	_temp_file_path = temp_file_tuple[1]
+    temp_file_tuple = mkstemp()
+    os.close(temp_file_tuple[0])
+    _temp_file_path = temp_file_tuple[1]
 
-	if os.path.exists('/dev/serial0'):	  	
+    if os.path.exists('/dev/serial0'):      
 
-		_debug_print("Opening serial device...")
+        _debug_print("Opening serial device...")
 
-		serial_device = serial.Serial(port = '/dev/serial0', timeout = 1, baudrate = 250000, parity = serial.PARITY_NONE, stopbits = serial.STOPBITS_ONE, bytesize = serial.EIGHTBITS)
-		serial_device_open = serial_device.isOpen()
+        serial_device = serial.Serial(port = '/dev/serial0', timeout = 1, baudrate = 250000, parity = serial.PARITY_NONE, stopbits = serial.STOPBITS_ONE, bytesize = serial.EIGHTBITS)
+        serial_device_open = serial_device.isOpen()
 
-		if serial_device_open == True:
-			
-			try:
-				_debug_print("Start recording")
-				
-				with open(_temp_file_path, 'wb') as file:
+        if serial_device_open == True:
+            
+            try:
+                _debug_print("Start recording")
+                
+                with open(_temp_file_path, 'wb') as file:
 
-					_debug_print("WRITING: initial header information")
-					file.write(_init_header_information())
+                    _debug_print("WRITING: initial header information")
+                    file.write(_init_header_information())
 
-					if serial_device.inWaiting():
-						_debug_print("Flushing input and starting from scratch")
-						serial_device.flushInput()
+                    if serial_device.inWaiting():
+                        _debug_print("Flushing input and starting from scratch")
+                        serial_device.flushInput()
 
-					_debug_print("WRITING: wave data")
+                    _debug_print("WRITING: wave data")
 
-					while _continue_writing:
-						while not serial_device.inWaiting():
-							time.sleep(0.01)
-						
-						audio_output = serial_device.read(serial_device.inWaiting())
+                    while _continue_writing:
+                        while not serial_device.inWaiting():
+                            time.sleep(0.01)
+                        
+                        audio_output = serial_device.read(serial_device.inWaiting())
 
-						wav_bytes_to_write = ""
-						for wav_byte in audio_output:
+                        wav_bytes_to_write = ""
+                        for wav_byte in audio_output:
 
-							# PADDING FOR 16-BIT
-							if _bitrate == 16:
-								wav_bytes_to_write += _from_hex(_spaced_l_endian_hex(0, byte_len = 1))
+                            # PADDING FOR 16-BIT
+                            if _bitrate == 16:
+                                wav_bytes_to_write += _from_hex(_spaced_l_endian_hex(0, byte_len = 1))
 
-							wav_bytes_to_write += wav_byte
+                            wav_bytes_to_write += wav_byte
 
-						file.write(audio_output)
-						time.sleep(0.1)
+                        file.write(audio_output)
+                        time.sleep(0.1)
 
-			finally:
-				serial_device.close()
+            finally:
+                serial_device.close()
 
-				_finalise_wav_file(_temp_file_path)
+                _finalise_wav_file(_temp_file_path)
 
-				_debug_print("Finished Recording.")
+                _debug_print("Finished Recording.")
 
-		else:
-			print("Error: Serial port failed to open")
+        else:
+            print("Error: Serial port failed to open")
 
-	else:
-		print("Error: Could not find serial port - are you sure it's enabled?")
+    else:
+        print("Error: Could not find serial port - are you sure it's enabled?")
 
 
 #######################
@@ -233,93 +233,93 @@ def _record_audio():
 #######################
 
 def record():
-	"""Start recording on the pi-topPULSE microphone."""
+    """Start recording on the pi-topPULSE microphone."""
 
-	global _thread_running
-	global _continue_writing
-	global _recording_thread
+    global _thread_running
+    global _continue_writing
+    global _recording_thread
 
-	if _thread_running == False:
-		_thread_running = True
-		_continue_writing = True
-		_recording_thread = Thread(group=None, target=_thread_method)
-		_recording_thread.start()
-	else:
-		print("Microphone is already recording!")
+    if _thread_running == False:
+        _thread_running = True
+        _continue_writing = True
+        _recording_thread = Thread(group=None, target=_thread_method)
+        _recording_thread.start()
+    else:
+        print("Microphone is already recording!")
 
 
 def is_recording():
-	"""Returns recording state of the pi-topPULSE microphone."""
+    """Returns recording state of the pi-topPULSE microphone."""
 
-	return _thread_running
+    return _thread_running
 
 
 def stop():
-	"""Stops recording audio"""
+    """Stops recording audio"""
 
-	global _thread_running
-	global _continue_writing
+    global _thread_running
+    global _continue_writing
 
-	_continue_writing = False
-	_recording_thread.join()
-	_thread_running = False
-	
+    _continue_writing = False
+    _recording_thread.join()
+    _thread_running = False
+    
 
 def save(file_path, overwrite=False):
-	"""Saves recorded audio to a file."""
+    """Saves recorded audio to a file."""
 
-	global _temp_file_path
+    global _temp_file_path
 
-	if _thread_running == False:
-		if _temp_file_path != "":
-			if os.path.exists(file_path) == False or overwrite == True:
-				
-				if os.path.exists(file_path):
-					os.remove(file_path)
+    if _thread_running == False:
+        if _temp_file_path != "":
+            if os.path.exists(file_path) == False or overwrite == True:
+                
+                if os.path.exists(file_path):
+                    os.remove(file_path)
 
-				os.rename(_temp_file_path, file_path)
-				_temp_file_path = ""
+                os.rename(_temp_file_path, file_path)
+                _temp_file_path = ""
 
-			else:
-				print("File already exists")
-		else:
-			print("No recorded audio data found")
-	else:
-		print("Microphone is still recording!")
+            else:
+                print("File already exists")
+        else:
+            print("No recorded audio data found")
+    else:
+        print("Microphone is still recording!")
 
 
 def set_sample_rate_to_16khz():
-	"""Set the appropriate I2C bits to enable 16,000Hz recording on the microphone"""
+    """Set the appropriate I2C bits to enable 16,000Hz recording on the microphone"""
 
-	configuration.set_microphone_sample_rate_to_16khz()
+    configuration.set_microphone_sample_rate_to_16khz()
 
 
 def set_sample_rate_to_22khz():
-	"""Set the appropriate I2C bits to enable 22,050Hz recording on the microphone"""
+    """Set the appropriate I2C bits to enable 22,050Hz recording on the microphone"""
 
-	configuration.set_microphone_sample_rate_to_22khz()
+    configuration.set_microphone_sample_rate_to_22khz()
 
 
 def set_bit_rate_to_unsigned_8():
-	"""Set bitrate to device default"""
+    """Set bitrate to device default"""
 
-	global _bitrate
-	_bitrate = 8
+    global _bitrate
+    _bitrate = 8
 
 
 def set_bit_rate_to_unsigned_16():
-	"""Set bitrate to double that of device default by zero-padding"""
+    """Set bitrate to double that of device default by zero-padding"""
 
-	global _bitrate
-	_bitrate = 16
+    global _bitrate
+    _bitrate = 16
 
 
 #######################
-# INITIALISATION 	  #
+# INITIALISATION      #
 #######################
 
 _signal = signal.signal(signal.SIGINT, _signal_handler)
 
 if not configuration.mcu_enabled():
-	print("Error: pi-topPULSE is not initialised. Please make sure that you have installed 'pt-peripheral-cfg' package")
-	sys.exit()
+    print("Error: pi-topPULSE is not initialised. Please make sure that you have installed 'pt-peripheral-cfg' package")
+    sys.exit()
