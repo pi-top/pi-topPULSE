@@ -109,6 +109,11 @@ def _init_header_information():
     fmt  = "66 6d 74 20"
     DATA = "64 61 74 61"
 
+    if configuration.microphone_sample_rate_is_22khz():
+	    capture_sample_rate = 22050
+	else:
+	    capture_sample_rate = 16000
+
     header =  _from_hex(RIFF)                                                   # ChunkID
     header += _from_hex(spaced_l_endian_hex(int_val = 0, byte_len = 4))         # ChunkSize - 4 bytes (to be changed depending on length of data...)
     header += _from_hex(WAVE)                                                   # Format
