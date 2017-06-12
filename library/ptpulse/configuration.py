@@ -45,9 +45,13 @@ def _debug_print(message):
 
 def _get_addr_for_bit(bit):
     if bit in [0,1,2,3]:
-        return uint8(pow(2, bit))
+        _debug_print("bit:  " + str(bit))
+        addr = uint8(pow(2, bit))
+        _debug_print("addr: " + str(addr))
+        return addr
     else:
-        return -1
+        print("Internal ERROR: invalid bit; cannot get address")
+        sys.exit()
 
 
 def _get_bit_string(value):
@@ -75,7 +79,7 @@ def _update_device_state_bit(bit, value):
         return False
 
     # Get the bit mask for the new state
-    new_state = uint8(pow(2, bit))
+    new_state = _get_addr_for_bit(bit)
 
     if value == 0:
         new_state = ~new_state
@@ -150,10 +154,6 @@ def _read_device_state():
         raise
 
 
-_clean_enable_state = _get_addr_for_bit(_eeprom_bit)
-_clean_disable_state = _get_addr_for_bit(_speaker_bit) | _get_addr_for_bit(_mcu_bit)
-
-
 #######################
 # EXTERNAL OPERATIONS #
 #######################
@@ -169,20 +169,23 @@ def set_debug_print_state(debug_enable):
 def reset_device_state(enable):
     """Reset the device state bits to the default enabled or disabled state"""
 
-    state_to_send = _clean_enable_state if enable else _clean_disable_state
+    clean_enable_state = _get_addr_for_bit(_eeprom_bit)
+    clean_disable_state = _get_addr_for_bit(_speaker_bit) | _get_addr_for_bit(_mcu_bit)
+
+    state_to_send = clean_enable_state if enable else clean_disable_state
     return _write_device_state(state_to_send)
 
 
 def set_microphone_sample_rate_to_16khz():
     """Set the appropriate I2C bits to enable 16,000Hz recording on the microphone"""
 
-    return _update_device_state_bit(3, 1)
+    return _update_device_state_bit(_16khz_bit, 1)
 
 
 def set_microphone_sample_rate_to_22khz():
     """Set the appropriate I2C bits to enable 22,050Hz recording on the microphone"""
 
-    return _update_device_state_bit(3, 0)
+    return _update_device_state_bit(_16khz_bit, 0)
 
 
 # GET STATE
