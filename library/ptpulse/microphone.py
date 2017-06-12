@@ -17,17 +17,17 @@
 # 02110-1301, USA.
 #
 
-import signal
-import os
+import codecs
 import binascii
+import math
+from tempfile import mkstemp
+import os
 import serial
-import time
+import signal
 import struct
 import sys
-import math
-import codecs
-from tempfile import mkstemp
 from threading import Thread
+import time
 # local
 import configuration
 
