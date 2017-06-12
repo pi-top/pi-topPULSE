@@ -239,6 +239,10 @@ def record():
     global _continue_writing
     global _recording_thread
 
+    if not configuration.mcu_enabled():
+        print("Error: pi-topPULSE is not initialised.")
+        sys.exit()
+
     if _thread_running == False:
         _thread_running = True
         _continue_writing = True
@@ -319,7 +323,3 @@ def set_bit_rate_to_unsigned_16():
 #######################
 
 _signal = signal.signal(signal.SIGINT, _signal_handler)
-
-if not configuration.mcu_enabled():
-    print("Error: pi-topPULSE is not initialised. Please make sure that you have installed 'pt-peripheral-cfg' package")
-    sys.exit()
