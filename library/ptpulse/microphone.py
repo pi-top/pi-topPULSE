@@ -78,15 +78,15 @@ def _from_hex(value):
     return bytearray.fromhex(value)
 
 
-def _spaced_l_endian_hex(int_val, byte_len=None):
-    min_byte_len = int(math.ceil(float(int_val.bit_length()) / 8.0))
+def _space_separated_little_endian(integer_value, byte_len):
+    """INTERNAL. Get an integer in format for WAV file header."""
+
+    min_byte_len = int(math.ceil(float(integer_value.bit_length()) / 8.0))
 
     if byte_len < min_byte_len:
         print("Byte length not long enough to accommodate value length")
         sys.exit()
-    elif byte_len == None:
-        byte_len = min_byte_len
-
+    
     if byte_len <= 1:
         pack_type = '<B'
     elif byte_len <= 2:
@@ -99,11 +99,14 @@ def _spaced_l_endian_hex(int_val, byte_len=None):
         print("Value cannot be represented in 8 bytes - exiting")
         sys.exit()
 
-    temp = codecs.getencoder('hex')(struct.pack(pack_type, int_val))[0].decode("utf-8")
+    hex_string = struct.pack(pack_type, integer_value)
+    temp = binascii.hexlify(hex_string).decode()
     return ' '.join([temp[i:i+2] for i in range(0, len(temp), 2)])
 
 
 def _init_header_information():
+    """INTERNAL. Create a WAV file header."""
+
     RIFF = "52 49 46 46"
     WAVE = "57 41 56 45"
     fmt  = "66 6d 74 20"
@@ -114,19 +117,19 @@ def _init_header_information():
     else:
         capture_sample_rate = 16000
 
-    header =  _from_hex(RIFF)                                                   			# ChunkID
-    header += _from_hex(_spaced_l_endian_hex(int_val = 0, byte_len = 4))        			# ChunkSize - 4 bytes (to be changed depending on length of data...)
-    header += _from_hex(WAVE)                                                   			# Format
-    header += _from_hex(fmt)                                                    			# Subchunk1ID
-    header += _from_hex(_spaced_l_endian_hex(int_val = 16, byte_len = 4))       			# Subchunk1Size (PCM = 16)
-    header += _from_hex(_spaced_l_endian_hex(int_val = 1, byte_len = 2))        			# AudioFormat   (PCM = 1)
-    header += _from_hex(_spaced_l_endian_hex(int_val = 1, byte_len = 2))        			# NumChannels
-    header += _from_hex(_spaced_l_endian_hex(int_val = capture_sample_rate, byte_len = 4))  # SampleRate
-    header += _from_hex(_spaced_l_endian_hex(int_val = capture_sample_rate, byte_len = 4))  # ByteRate (Same as SampleRate due to 1 channel, 1 byte per sample)
-    header += _from_hex(_spaced_l_endian_hex(int_val = 1, byte_len = 2))        			# BlockAlign - (no. of bytes per sample)
-    header += _from_hex(_spaced_l_endian_hex(int_val = _bitrate, byte_len = 2)) 			# BitsPerSample
-    header += _from_hex(DATA)                                                   			# Subchunk2ID
-    header += _from_hex(_spaced_l_endian_hex(int_val = 0, byte_len = 4))        			# Subchunk2Size - 4 bytes (to be changed depending on length of data...)
+    header =  _from_hex(RIFF)                                                   # ChunkID
+    header += _from_hex(_space_separated_little_endian(0, 4))        			# ChunkSize - 4 bytes (to be changed depending on length of data...)
+    header += _from_hex(WAVE)                                                   # Format
+    header += _from_hex(fmt)                                                    # Subchunk1ID
+    header += _from_hex(_space_separated_little_endian(16, 4))       			# Subchunk1Size (PCM = 16)
+    header += _from_hex(_space_separated_little_endian(1, 2))        			# AudioFormat   (PCM = 1)
+    header += _from_hex(_space_separated_little_endian(1, 2))        			# NumChannels
+    header += _from_hex(_space_separated_little_endian(capture_sample_rate, 4)) # SampleRate
+    header += _from_hex(_space_separated_little_endian(capture_sample_rate, 4)) # ByteRate (Same as SampleRate due to 1 channel, 1 byte per sample)
+    header += _from_hex(_space_separated_little_endian(1, 2))        			# BlockAlign - (no. of bytes per sample)
+    header += _from_hex(_space_separated_little_endian(_bitrate, 2)) 			# BitsPerSample
+    header += _from_hex(DATA)                                                   # Subchunk2ID
+    header += _from_hex(_space_separated_little_endian(0, 4))        			# Subchunk2Size - 4 bytes (to be changed depending on length of data...)
 
     return header
 
@@ -134,7 +137,7 @@ def _init_header_information():
 def _update_header_in_file(file, position, value):
     """INTERNAL. Update the WAV header  """
 
-    hex_value = _spaced_l_endian_hex(value, 4)
+    hex_value = _space_separated_little_endian(value, 4)
     data = binascii.unhexlify(''.join(hex_value.split()))
     
     file.seek(position)
@@ -205,9 +208,9 @@ def _record_audio():
                         wav_bytes_to_write = ""
                         for wav_byte in audio_output:
 
-                            # PADDING FOR 16-BIT
+                            # Padding for 16 bit
                             if _bitrate == 16:
-                                wav_bytes_to_write += _from_hex(_spaced_l_endian_hex(0, byte_len = 1))
+                                wav_bytes_to_write += _from_hex(_space_separated_little_endian(0, 1))
 
                             wav_bytes_to_write += wav_byte
 
