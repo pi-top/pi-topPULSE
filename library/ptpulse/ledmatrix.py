@@ -17,13 +17,13 @@
 # 02110-1301, USA.
 #
 
+from copy import deepcopy
+import math
 import os
 import serial
 import signal
 import sys
 import time
-import math
-from copy import deepcopy
 from threading import Timer
 # local
 import configuration
