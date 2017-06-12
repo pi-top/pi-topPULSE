@@ -100,7 +100,7 @@ def _spaced_l_endian_hex(int_val, byte_len=None):
     return ' '.join([temp[i:i+2] for i in range(0, len(temp), 2)])
 
 
-def init_header_information():
+def _init_header_information():
     RIFF = "52 49 46 46"
     WAVE = "57 41 56 45"
     fmt  = "66 6d 74 20"
