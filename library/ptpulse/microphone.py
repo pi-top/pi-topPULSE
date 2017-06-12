@@ -24,6 +24,8 @@ import serial
 import time
 import struct
 import sys
+import math
+import codecs
 from tempfile import mkstemp
 from threading import Thread
 # local

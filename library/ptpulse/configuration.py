@@ -29,7 +29,7 @@ def _debug_print(message):
 def _get_addr_for_bit(bit):
     if bit in [0,1,2,3]:
         return uint8(pow(2, bit))
-    else
+    else:
         return -1
 
 
