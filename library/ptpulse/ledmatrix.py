@@ -26,7 +26,7 @@ import sys
 import time
 from threading import Timer
 # local
-import configuration
+from ptpulse import configuration
 
 _initialised = False
 _debug = False
