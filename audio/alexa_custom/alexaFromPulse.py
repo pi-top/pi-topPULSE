@@ -95,7 +95,7 @@ ACCESS_TOKEN = ""
 # LOGIC STARTS HERE #
 #####################
 ptpulsemic.set_sample_rate_to_16khz()
-ptpulsemic.set_bit_rate_to_unsigned_16()
+ptpulsemic.set_bit_rate_to_signed_16()
 
 ptpulsemic.record()
 

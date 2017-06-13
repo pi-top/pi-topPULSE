@@ -29,7 +29,7 @@ import sys
 from threading import Thread
 import time
 # local
-import configuration
+from ptpulse import configuration
 
 _debug = False
 _bitrate = 8
@@ -80,12 +80,6 @@ def _from_hex(value):
 
 def _space_separated_little_endian(integer_value, byte_len):
     """INTERNAL. Get an integer in format for WAV file header."""
-
-    min_byte_len = int(math.ceil(float(integer_value.bit_length()) / 8.0))
-
-    if byte_len < min_byte_len:
-        print("Byte length not long enough to accommodate value length")
-        sys.exit()
     
     if byte_len <= 1:
         pack_type = '<B'
@@ -204,17 +198,33 @@ def _record_audio():
                             time.sleep(0.01)
                         
                         audio_output = serial_device.read(serial_device.inWaiting())
+                        data_to_write = ""
+                        bytes_to_write = bytearray()
 
-                        wav_bytes_to_write = ""
-                        for wav_byte in audio_output:
+                        for pcm_data_block in audio_output:
 
-                            # Padding for 16 bit
                             if _bitrate == 16:
-                                wav_bytes_to_write += _from_hex(_space_separated_little_endian(0, 1))
 
-                            wav_bytes_to_write += wav_byte
+                                pcm_data_int = 0
+                                if sys.version_info >= (3, 0):
+                                    pcm_data_int = pcm_data_block
+                                    scaled_val = int((pcm_data_int * 32768) / 255)
+                                    bytes_to_write += _from_hex(_space_separated_little_endian(scaled_val, 2))
 
-                        file.write(audio_output)
+                                else:
+                                    pcm_data_int = ord(pcm_data_block)
+                                    scaled_val = int((pcm_data_int * 32768) / 255)
+                                    data_to_write += _from_hex(_space_separated_little_endian(scaled_val, 2))
+                                
+                            else:
+
+                                data_to_write += pcm_data_block
+
+                        if sys.version_info >= (3, 0):
+                            file.write(bytes_to_write)
+                        else:
+                            file.write(data_to_write)
+                        
                         time.sleep(0.1)
 
             finally:
@@ -314,8 +324,8 @@ def set_bit_rate_to_unsigned_8():
     _bitrate = 8
 
 
-def set_bit_rate_to_unsigned_16():
-    """Set bitrate to double that of device default by zero-padding"""
+def set_bit_rate_to_signed_16():
+    """Set bitrate to double that of device default by scaling the signal"""
 
     global _bitrate
     _bitrate = 16
