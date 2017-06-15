@@ -1,0 +1,117 @@
+#!/bin/bash
+
+usage() { echo "Usage: $0 <record | upload | playback | pt-access-token | avs-access-token>" 1>&2; exit 1; }
+upload-usage() { echo -e "Usage: $0 upload <options>\n\t-a\tAVS audio file\n\t-m\tMetadata file path\n\t-t\tAVS access token" 1>&2; exit 1; }
+playback-usage() { echo -e "Usage: $0 playback <options>\n\t-a\tAudio file" 1>&2; exit 1; }
+avs-access-token-usage() { echo -e "Usage: $0 avs-access-token <options>\n\t-u\tpi-top account username\n\t-t\tpi-top account access token" 1>&2; exit 1; }
+
+do_record() {
+    exec /usr/lib/pt-avs/run/audio/start-stop-record.sh $@
+}
+
+do_upload() {
+    local OPTIND o a
+    while getopts ":a:m:t:" o; do
+        case "${o}" in
+            a)
+                export AVS_REQ_FILE=${OPTARG}
+                ;;
+            m)
+                export METADATA_FILEPATH=${OPTARG}
+                ;;
+            t)
+                export AVS_ACCESS_TOKEN=${OPTARG}
+                ;;
+            *)
+                upload-usage
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+    if [ -z "$AVS_REQ_FILE" ] || [ -z "$METADATA_FILEPATH" ] || [ -z "$AVS_ACCESS_TOKEN" ]
+    then
+        upload-usage
+    fi
+    exec /usr/lib/pt-avs/run/avs/upload-req-download-resp.sh
+}
+
+do_playback() {
+    local OPTIND o a
+    while getopts ":a" o; do
+        case "${o}" in
+            a)
+                export AVS_RESP_FILE=${OPTARG}
+                ;;
+            *)
+                playback-usage
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+    if [ -z "$AVS_RESP_FILE" ]
+    then
+        playback-usage
+    fi
+    exec /usr/lib/pt-avs/run/audio/playback-and-cleanup.sh
+}
+
+do_pt-access-token() {
+    exec /usr/lib/pt-avs/run/auth/get-pt-id-and-access-token-with-pt-login.sh $@
+}
+
+do_avs-access-token() {
+    local OPTIND o a
+    while getopts ":u:t:" o; do
+        case "${o}" in
+            u)
+                export PT_USER_ID=${OPTARG}
+                ;;
+            t)
+                export PT_ACCESS_TOKEN=${OPTARG}
+                ;;
+            *)
+                avs-access-token-usage
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+    if [ -z "$PT_USER_ID" ] || [ -z "$PT_ACCESS_TOKEN" ]
+    then
+        avs-access-token-usage
+    fi
+    exec /usr/lib/pt-avs/run/avs/upload-req-download-resp.sh
+}
+
+
+while [[ $# -gt 1 ]]
+do
+key="$1"
+
+case $key in
+    record)
+    shift
+    do_record $@
+    ;;
+    upload)
+    shift
+    do_upload $@
+    ;;
+    playback)
+    shift
+    do_playback $@
+    ;;
+    pt-access-token)
+    shift
+    do_pt-access-token $@
+    ;;
+    avs-access-token)
+    shift
+    do_avs-access-token $@
+    ;;
+    *)
+    usage
+    ;;
+esac
+done
+
+usage
