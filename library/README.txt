@@ -1,1 +1,0 @@
-More information: https://pi-top.com/product/addon
