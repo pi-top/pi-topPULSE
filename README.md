@@ -3,7 +3,7 @@
 Available from the [pi-top website](https://pi-top.com/product/addon).
 
 ***Release note***:
-Due to the following [Linux kernel issue](https://github.com/raspberrypi/linux/issues/1855) if you are running version 4.9.x pi-topPULSE may not be fully functional. Until the issue is resolved it is necessary to [downgrade you kernel version](wiki).
+Due to the following [Linux kernel issue](https://github.com/raspberrypi/linux/issues/1855), if you are running Linux kernel version 4.9.x, pi-topPULSE may not be fully functional. Until the issue is resolved it is necessary to [downgrade you kernel version](wiki).
 
 To get started with pi-topPULSE, you have a few different options:
 
@@ -11,15 +11,17 @@ To get started with pi-topPULSE, you have a few different options:
 
 All pi-topPULSE software and libraries are included and configured 'out-of-the-box' as standard on the latest version of pi-topOS (>= 23-06-2017).
 
+Download the latest version of pi-topOS at [https://pi-top.com/get-started](https://pi-top.com/get-started).
+
 If you are running an older version of pi-topOS or running an alternative Raspbian-based disto, then follow the steps below:
 
 ## Alternative: Install via apt-get
 
-If you are using a Raspbian-based distro and have their apt repository enabled you can follow any one of the below instructions
+If you are using a Raspbian-based distro and have their apt repository enabled you can follow either of the below instructions. Non Raspbian-based distros are not officially supported by pi-top but may be possible via a customer installation.
 
 ### Install everything
 
-The following commands will install everything you need to use the speaker and interact with the LEDs using Python. It will also reboot your Raspberry so ensure that any open documents have first been saved.
+The following commands will install everything you need to use the speaker and interact with the LEDs using Python. It will also reboot your Raspberry Pi so ensure that any open documents have first been saved.
 
     sudo apt-get update
     sudo apt-get install pt-pulse
@@ -27,7 +29,7 @@ The following commands will install everything you need to use the speaker and i
 
 ### Custom installation
 
-If you prefer to manually install the packages or install a specific set of packages see the [advanced installations page](https://github.com/pi-top/pi-topPULSE/wiki/Advanced-Installation-Methods).
+If you prefer to manually install the packages or want to install a specific set of packages see the [advanced installations page](https://github.com/pi-top/pi-topPULSE/wiki/Advanced-Installation-Methods).
 
 
 # Using pi-topPULSE:
