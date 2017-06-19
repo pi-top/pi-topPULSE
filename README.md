@@ -5,6 +5,7 @@ Available from the [pi-top website](https://pi-top.com/product/addon).
 ---
 __***Release note***__:
 Due to the following [Linux kernel issue](https://github.com/raspberrypi/linux/issues/1855), if you are running Linux kernel version 4.9.x, pi-topPULSE may not be fully functional. Until the issue is resolved it is necessary to [downgrade your kernel version](https://github.com/pi-top/pi-topPULSE/wiki/Downgrading-your-kernel-version).
+
 ---
 
 To get started with pi-topPULSE we recommend installing the latest version of pi-topOS, otherwise you can follow one of the alternative methods:
