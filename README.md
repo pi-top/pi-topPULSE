@@ -39,7 +39,7 @@ If you prefer to manually install the packages or want to install a specific set
 
 ## Alexa Demo
 
-...
+For a Alexa Voice Service demo see https://github.com/pi-top/Alexa-Voice-Service-Integration
 
 ## In a Python script
 
