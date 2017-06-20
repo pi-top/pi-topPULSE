@@ -1,6 +1,6 @@
 # pi-topPULSE
 
-Available from the [pi-top website](https://pi-top.com/product/addon).
+Available from the [pi-top website](https://pi-top.com/products/accessories).
 
 ---
 __***Release note***:__
