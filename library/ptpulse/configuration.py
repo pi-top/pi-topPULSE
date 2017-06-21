@@ -71,7 +71,7 @@ def _update_device_state_bit(bit, value):
 
     # Check if there is anything to do
     if (value == 1 and (new_state & current_state) != 0) or (value == 0 and (~new_state & ~current_state) != 0):
-        print("Warning: Mode already set, nothing to send")
+        _debug_print("Warning: Mode already set, nothing to send")
         return True
 
     if value == 0:
