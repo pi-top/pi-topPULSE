@@ -3,9 +3,9 @@
 import colorsys
 import math
 import time
-import ptpulse
+from ptpulse import ledmatrix
 
-s_width,s_height=ptpulse.get_shape()
+s_width,s_height=ledmatrix.get_shape()
 
 
 # twisty swirly goodness
@@ -153,10 +153,10 @@ while True:
                 r = int(max(0, min(255, r)))
                 g = int(max(0, min(255, g)))
                 b = int(max(0, min(255, b)))
-                ptpulse.set_pixel(x, y, r, g, b)
+                ledmatrix.set_pixel(x, y, r, g, b)
         step += 1
 
-        ptpulse.show()
+        ledmatrix.show()
 
     effect = effects.pop()
     effects.insert(0, effect)
