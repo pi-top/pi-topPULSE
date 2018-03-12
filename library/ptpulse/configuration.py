@@ -9,7 +9,7 @@ from ptcommon.common_ids import DeviceID
 from ptcommon.sys_config import I2S
 from ptcommon.sys_config import UART
 from ptcommon.sys_config import HDMI
-from ptcommon.common_functions
+from ptcommon.common_functions import get_debian_version
 
 _bus_id = 1
 _device_addr = 0x24
@@ -163,18 +163,24 @@ def _check_and_set_serial_config():
 
     reboot_required = False
 
-    version = common_functions.get_debian_version()
+    version = get_debian_version()
 
-    if (version is not None and version == 8):
-        if UART.baud_rate_correctly_configured(expected_clock_val=1627604, expected_baud_val=460800, expected_enabled_val=1) is True:
-            PTLogger.debug("Baud rate is already configured for ptpulse")
-            reboot_required = False
+    if version is not None:
+        if version == 8:
+            if UART.baud_rate_correctly_configured(expected_clock_val=1627604, expected_baud_val=460800, expected_enabled_val=1) is True:
+                PTLogger.debug("Baud rate is already configured for ptpulse")
+                reboot_required = False
+            else:
+                PTLogger.debug("Baud rate NOT already configured for ptpulse, configuring...")
+                UART.configure_in_boot_config(init_uart_clock=1627604, init_uart_baud=460800, enable_uart=1)
+                reboot_required = True
+
+            reboot_required = (UART.remove_serial_from_cmdline() or reboot_required)
         else:
-            PTLogger.debug("Baud rate NOT already configured for ptpulse, configuring...")
-            UART.configure_in_boot_config(init_uart_clock=1627604, init_uart_baud=460800, enable_uart=1)
-            reboot_required = True
+            PTLogger.debug("UART baud rate does not need to be configured for ptpulse...")
 
-        reboot_required = (UART.remove_serial_from_cmdline() or reboot_required)
+    else:
+        PTLogger.warning("Unable to detect OS version - cannot determine if UART baud rate needs to be configured for ptpulse...")
 
     return reboot_required
 
