@@ -164,8 +164,8 @@ def _check_and_set_serial_config():
     reboot_required = False
 
     version = get_debian_version()
-    if version is not None:
-        if version > 8:
+    if isinstance(version, int):
+        if int(version) > 8:
             PTLogger.debug("UART baud rate does not need to be configured for ptpulse...")
         else:
             if UART.boot_config_correctly_configured(expected_clock_val=1627604, expected_baud_val=460800) is True:
