@@ -164,24 +164,27 @@ def _check_and_set_serial_config():
     reboot_required = False
 
     version = get_debian_version()
-
     if version is not None:
-        if version == 8:
-            if UART.baud_rate_correctly_configured(expected_clock_val=1627604, expected_baud_val=460800, expected_enabled_val=1) is True:
+        if version > 8:
+            PTLogger.debug("UART baud rate does not need to be configured for ptpulse...")
+        else:
+            if UART.boot_config_correctly_configured(expected_clock_val=1627604, expected_baud_val=460800) is True:
                 PTLogger.debug("Baud rate is already configured for ptpulse")
-                reboot_required = False
             else:
                 PTLogger.debug("Baud rate NOT already configured for ptpulse, configuring...")
-                UART.configure_in_boot_config(init_uart_clock=1627604, init_uart_baud=460800, enable_uart=1)
+                UART.configure_in_boot_config(init_uart_clock=1627604, init_uart_baud=460800)
                 reboot_required = True
-
-            reboot_required = (UART.remove_serial_from_cmdline() or reboot_required)
-        else:
-            PTLogger.debug("UART baud rate does not need to be configured for ptpulse...")
-
     else:
         PTLogger.warning("Unable to detect OS version - cannot determine if UART baud rate needs to be configured for ptpulse...")
 
+    if UART.enabled() is True:
+        PTLogger.debug("UART is already enabled")
+    else:
+        PTLogger.debug("UART NOT already enabled, enabling...")
+        UART.set_enable(True)  # UART.configure_in_boot_config(enable_uart=1)
+        reboot_required = True
+
+    reboot_required = (UART.remove_serial_from_cmdline() or reboot_required)
     return reboot_required
 
 
