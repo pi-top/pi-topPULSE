@@ -1,3 +1,17 @@
 #!/bin/bash -e
 
-pip3 install /tmp/pyserial-3.4-py2.py3-none-any.whl --upgrade
+pyserial_wheel_file="pyserial-3.4-py2.py3-none-any.whl"
+python_wheel_dir="/usr/share/python-wheels"
+pyserial_wheel_file_path="$python_wheel_dir/$pyserial_wheel_file"
+
+md5="0e555d61700e0b95a15d8162092c5299"
+pyserial_wheel_link="https://pypi.python.org/packages/0d/e4/2a744dd9e3be04a0c0907414e2a01a7c88bb3915cbe3c8cc06e209f59c30/$pyserial_wheel_file#md5=$md5"
+
+
+# Download file if not found
+if [ ! -f "$pyserial_wheel_file" ]; then
+	wget "$pyserial_wheel_link" --output-document="$pyserial_wheel_file_path"
+fi
+
+# Install
+pip3 install "$pyserial_wheel_file" --upgrade
