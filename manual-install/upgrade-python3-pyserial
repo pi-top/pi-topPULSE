@@ -14,4 +14,4 @@ if [ ! -f "$pyserial_wheel_file" ]; then
 fi
 
 # Install
-pip3 install "$pyserial_wheel_file" --upgrade
+pip3 install "$pyserial_wheel_file_path" --upgrade
