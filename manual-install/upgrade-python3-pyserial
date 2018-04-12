@@ -9,7 +9,7 @@ pyserial_wheel_link="https://pypi.python.org/packages/0d/e4/2a744dd9e3be04a0c090
 
 
 # Download file if not found
-if [ ! -f "$pyserial_wheel_file" ]; then
+if [ ! -f "$pyserial_wheel_file_path" ]; then
 	wget "$pyserial_wheel_link" --output-document="$pyserial_wheel_file_path"
 fi
 
