@@ -18,17 +18,7 @@ download_wheel_if_missing()
 
 install_from_wheel()
 {
-	pyserial_ver="$(pip3 freeze | grep "^pyserial" | awk -F'=' '{print $NF}')"
-	if [ -z "$pyserial_ver" ]; then
-		pip3 install "$pyserial_wheel_file_path" --upgrade
-		return
-	else
-		dpkg --compare-versions "$pyserial_ver" lt 3.4
-		invalid_version=$?
-		if $invalid_version; then
-			pip3 install "$pyserial_wheel_file_path" --upgrade
-		fi
-	fi
+	pip3 install "$pyserial_wheel_file_path" --upgrade
 }
 
 download_wheel_if_missing
