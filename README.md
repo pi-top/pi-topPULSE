@@ -94,7 +94,7 @@ sudo apt update
 sudo apt install pt-pulse
 ```
 
-This will install the ptpulse Python library, as well as its dependencies, including pt-device-manager (see above).
+This will install the `ptpulse` Python library, as well as its dependencies, including pt-device-manager (see above).
 
 If you prefer to manually install the packages or want to install a specific set of packages see the [Manual Configuration and Installation](https://github.com/pi-top/pi-topPULSE/blob/master/manual-install/manual-configuration.md) instructions.
 
@@ -130,6 +130,7 @@ Alternatively, if you are running Python in `IDLE`, please make sure you start L
 ##### Why is my pi-topPULSE not working?
 
 * Currently, **pi-topPULSE is only supported on Raspberry Pi 3**. This is due to problems setting the UART clock speed on earlier Raspberry Pi models. It might be possible to get this to work on earlier versions, but this is not currently supported.
+* If you continue to experience problems, see [Diagnostic Tools](https://github.com/pi-top/Diagnostic-Tools/) for how to generate diagnostic logs to send to the pi-top support team.
 
 ##### I have installed pi-topPULSE software manually...
 * If you are running Linux kernel version 4.9.x previous to 4.9.35, pi-topPULSE [may not be fully functional](https://github.com/raspberrypi/linux/issues/1855). In particular, this issue prevents the pi-topPULSE LEDs from working. If you are experiencing this issue, please check your kernel version by typing `uname -r` at the terminal. You can update your kernel version to the latest by running `sudo apt install raspberrypi-kernel`.
