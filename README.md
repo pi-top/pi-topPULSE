@@ -62,6 +62,9 @@ _Note: GPIO pins are references by their physical number_
 
 For a full pinout of the pi-topPULSE, see this [GPIO Pinout](https://pinout.xyz/pinout/pi_toppulse)
 
+#### Dependencies
+* pyserial
+    * Used to communicate with the pi-topPULSE - this is installed via the script in [manual-install](manual-install) folder, which requires `wget` and `pip3` to work.
 
 ## <a name="software"></a> Software
 #### <a name="software-pt-os"></a> pi-topPULSE on pi-topOS
