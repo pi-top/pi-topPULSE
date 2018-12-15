@@ -73,7 +73,7 @@ while True:
             show_number(temperature, 255, 255, 0)
         else:
             show_number(temperature, 255, 0, 0)
-        lastemperature = temperature
+        lastTemperature = temperature
     time.sleep(2)
 
 ledmatrix.clear()
