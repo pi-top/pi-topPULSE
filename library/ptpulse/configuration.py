@@ -234,9 +234,9 @@ def enable_device():
     is_pi_top = (_host_device_id == DeviceID.pi_top)
     is_pi_top_ceed = (_host_device_id == DeviceID.pi_top_ceed)
     hub_is_v1 = (is_pi_top or is_pi_top_ceed)
-    is_pi_top_v2 = (_host_device_id == DeviceID.pi_top_v2)
+    is_pi_top_3 = (_host_device_id == DeviceID.pi_top_3)
 
-    if is_pi_top_v2:
+    if is_pi_top_3:
         reboot_required = _initialise_v2_hub_pulse()
         if (reboot_required is False):
             v2_hub_hdmi_to_i2s_required = True
